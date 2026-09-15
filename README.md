@@ -120,7 +120,9 @@ each system, and what to expect from the first run.
 offer its source to your users. The licence file also carries a narrow Section 7
 permission covering the proprietary Claude Agent SDK that Watchfire depends on.
 
-Container images are not published — build from source. See
-[deployment](docs/deployment.md#what-is-not-published) for why.
+The container image at `ghcr.io/nmehlei/watchfire` bundles the Claude Agent SDK and the
+Claude Code executable, which are proprietary and stay under
+[Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance) — see
+[deployment](docs/deployment.md#notice-the-image-contains-anthropic-components).
 
-> Watchfire is not affiliated with InterSystems Watchfire®.
+> Watchfire is not affiliated with InterSystems IRIS®.
