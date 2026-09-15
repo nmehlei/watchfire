@@ -1,14 +1,23 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="brand/lockup-dark.svg">
-    <img src="brand/lockup.svg" alt="Watchfire" width="300">
-  </picture>
-</p>
+<div align="center">
 
-<p align="center">
-  An autonomous, read-only SRE agent that watches your infrastructure
-  through the night and tells you what broke.
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="brand/mark-dark.svg">
+  <img src="brand/mark.svg" alt="" width="132" height="132">
+</picture>
+
+# Watchfire
+
+**An autonomous, read-only SRE agent that watches your infrastructure
+through the night and tells you what broke.**
+
+[![Build](https://img.shields.io/github/actions/workflow/status/nmehlei/watchfire/build-and-push.yml?branch=main&style=flat-square&label=build&color=6D7BFF)](https://github.com/nmehlei/watchfire/actions/workflows/build-and-push.yml)
+[![Licence](https://img.shields.io/badge/licence-AGPL--3.0--only-6D7BFF?style=flat-square)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A5%2024-6D7BFF?style=flat-square)](.nvmrc)
+[![Mode](https://img.shields.io/badge/mode-read--only-1F9D55?style=flat-square)](#it-never-writes)
+
+[Quickstart](#quickstart) · [Usage](docs/usage.md) · [Operations](docs/operations.md) · [Deployment](docs/deployment.md) · [Specs](specs/README.md)
+
+</div>
 
 ---
 
