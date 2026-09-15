@@ -1,0 +1,83 @@
+# Example Watchfire tenant registry. See specs/02-tenants.md.
+#
+# Copy to config/tenants.yaml (gitignored) and edit, or point
+# IRIS_TENANTS_PATH at your own file. The tenants below are placeholders.
+#
+# Secrets never live here — only environment-variable NAMES
+# (e.g. `token_env: OBS_TOKEN_ACME`). Provide the values to the process.
+
+tenants:
+  - id: acme
+    display_name: ACME
+    systems:
+      - observability:
+          stream: acme
+          # Required by the registry schema, but the OpenObserve adapter does
+          # not read it: it authenticates with the shared OPENOBSERVE_URL /
+          # OPENOBSERVE_USER / OPENOBSERVE_PASSWORD and distinguishes tenants
+          # by `stream`. No per-tenant credential is needed for it.
+          token_env: OBS_TOKEN_ACME
+      - azure:
+          subscription_id: "<acme-sub-id>"
+          tenant_id: "<main-az-tenant>"
+          sp_env: AZ_SP_MAIN
+      - hetzner:
+          account: acme
+          token_env: HCLOUD_TOKEN_ACME
+          ssh_hosts: []
+      - ssl:
+          hosts: []
+      - http_health:
+          endpoints: []
+
+  - id: globex
+    display_name: Globex
+    systems:
+      - observability:
+          stream: globex
+          token_env: OBS_TOKEN_GLOBEX
+      - azure:
+          subscription_id: "<globex-sub-id>"
+          tenant_id: "<main-az-tenant>"
+          sp_env: AZ_SP_MAIN
+      - ssl:
+          hosts: []
+      - http_health:
+          endpoints: []
+
+  - id: initech
+    display_name: Initech
+    systems:
+      - observability:
+          stream: initech
+          token_env: OBS_TOKEN_INITECH
+      - azure:
+          subscription_id: "<initech-sub-id>"
+          tenant_id: "<initech-az-tenant>"
+          sp_env: AZ_SP_INITECH
+      - hetzner:
+          account: initech
+          token_env: HCLOUD_TOKEN_INITECH
+          ssh_hosts: []
+      - kubernetes:
+          kubeconfig_env: KUBECONFIG_INITECH
+          context: initech-prod
+      - ssl:
+          hosts: []
+      - http_health:
+          endpoints: []
+
+  - id: umbrella
+    display_name: Umbrella
+    systems:
+      - observability:
+          stream: umbrella
+          token_env: OBS_TOKEN_UMBRELLA
+      - azure:
+          subscription_id: "<umbrella-sub-id>"
+          tenant_id: "<main-az-tenant>"
+          sp_env: AZ_SP_MAIN
+      - ssl:
+          hosts: []
+      - http_health:
+          endpoints: []

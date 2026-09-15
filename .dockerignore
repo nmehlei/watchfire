@@ -1,0 +1,32 @@
+.git
+.github
+.DS_Store
+node_modules
+**/node_modules
+dist
+coverage
+*.log
+.env
+.env.*
+.local
+secrets
+# The dashboard's source never enters the agent image, but its manifest
+# must: the root lockfile lists it as a workspace, and `npm ci` fails as
+# out-of-sync when a listed workspace's package.json is missing.
+apps/dashboard/*
+!apps/dashboard/package.json
+brand
+docs
+specs
+scripts
+infra
+!infra/
+infra/*
+!infra/ssh/
+!infra/ssh/**
+*.md
+!README.md
+.vscode
+.idea
+*.swp
+*.swo

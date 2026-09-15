@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Thin wrapper. In prod (container): node dist/adapters/ado/cli.js
+# In dev: npx tsx src/adapters/ado/cli.ts
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(dirname "$here")"
+
+if [[ -f "$repo/dist/adapters/ado/cli.js" ]]; then
+  exec node "$repo/dist/adapters/ado/cli.js" "$@"
+elif [[ -f "$repo/src/adapters/ado/cli.ts" ]]; then
+  exec npx --no-install tsx "$repo/src/adapters/ado/cli.ts" "$@"
+else
+  echo "check-ado: neither dist/ nor src/ cli.ts found" >&2
+  exit 2
+fi

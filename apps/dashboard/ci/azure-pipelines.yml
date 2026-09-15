@@ -1,0 +1,125 @@
+# Watchfire-Dashboard CI/CD pipeline (Azure DevOps).
+#
+# Stages:
+#   1. build    — npm ci, lint, typecheck, test, next build (standalone)
+#   2. deploy   — package the standalone output and push to App Service
+#
+# Prereqs (one-time, manually):
+#   * Pipeline variable group `iris-dashboard` (optional, for future secrets)
+#   * Azure RM service connection named `iris-dashboard-deploy-sc`,
+#     scoped to RG `iris-dashboard-RG` with role `Website Contributor`
+#   * The App Service `iris-dashboard` already provisioned by your-iac-repo
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - apps/dashboard
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - apps/dashboard
+
+variables:
+  nodeVersion: '22.x'
+  webAppName: 'iris-dashboard'
+  serviceConnection: 'iris-dashboard-deploy-sc'
+  buildArtifactName: 'iris-dashboard-standalone'
+  irisApiUrl: 'https://iris.example.com'
+
+stages:
+  - stage: build
+    displayName: Build + verify
+    jobs:
+      - job: build
+        displayName: npm ci, lint, typecheck, test, build
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            displayName: Use Node $(nodeVersion)
+            inputs:
+              versionSpec: '$(nodeVersion)'
+
+          - task: Cache@2
+            displayName: Cache npm
+            inputs:
+              key: 'npm | "$(Agent.OS)" | package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: '$(Pipeline.Workspace)/.npm'
+
+          # The dashboard is a workspace in the Watchfire monorepo: one lockfile
+          # at the repository root covers it, and every script runs through
+          # the workspace flag.
+          - script: npm ci --prefer-offline --workspace @watchfire/dashboard --include-workspace-root
+            displayName: npm ci
+
+          - script: npm run lint -w @watchfire/dashboard
+            displayName: Lint
+
+          - script: npm run typecheck -w @watchfire/dashboard
+            displayName: Typecheck
+
+          - script: npm run test -w @watchfire/dashboard
+            displayName: Unit tests
+
+          - script: npm run build -w @watchfire/dashboard
+            displayName: Next build (standalone)
+            # IRIS_API_URL is the only var the build needs at this stage
+            # (used for typed-routes generation if we ever generate types
+            # from Watchfire). The token + AAD secrets land at runtime via
+            # App Service app_settings.
+            env:
+              IRIS_API_URL: $(irisApiUrl)
+
+          - script: ./apps/dashboard/ci/assemble-standalone.sh
+            displayName: Assemble standalone tree
+
+          - task: ArchiveFiles@2
+            displayName: Zip standalone
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/apps/dashboard/.next/standalone'
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: '$(Build.ArtifactStagingDirectory)/$(buildArtifactName).zip'
+              replaceExistingArchive: true
+
+          - publish: '$(Build.ArtifactStagingDirectory)/$(buildArtifactName).zip'
+            artifact: $(buildArtifactName)
+            displayName: Publish artifact
+
+  - stage: deploy
+    displayName: Deploy to App Service
+    dependsOn: build
+    # Deploy on push to main and on manual runs, but never on PR builds.
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - deployment: deploy
+        displayName: AzureWebApp@1
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'iris-dashboard-production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: $(buildArtifactName)
+
+                - task: AzureWebApp@1
+                  displayName: Deploy zip to App Service
+                  inputs:
+                    azureSubscription: '$(serviceConnection)'
+                    appType: webApp
+                    appName: $(webAppName)
+                    package: '$(Pipeline.Workspace)/$(buildArtifactName)/$(buildArtifactName).zip'
+                    deploymentMethod: zipDeploy
+                    # node server.js is the standalone entrypoint
+                    startUpCommand: 'node server.js'

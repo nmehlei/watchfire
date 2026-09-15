@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Thin wrapper. In prod (container): node dist/adapters/ssl/cli.js
+# In dev: npx tsx src/adapters/ssl/cli.ts
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(dirname "$here")"
+
+if [[ -f "$repo/dist/adapters/ssl/cli.js" ]]; then
+  exec node "$repo/dist/adapters/ssl/cli.js" "$@"
+elif [[ -f "$repo/src/adapters/ssl/cli.ts" ]]; then
+  exec npx --no-install tsx "$repo/src/adapters/ssl/cli.ts" "$@"
+else
+  echo "check-ssl: neither dist/ nor src/ cli.ts found" >&2
+  exit 2
+fi

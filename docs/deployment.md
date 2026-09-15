@@ -1,0 +1,109 @@
+# Deployment
+
+Watchfire has two deployable pieces with deliberately different paths: the agent ships
+as a container image, the dashboard ships as a Node application to an App Service.
+
+## The agent
+
+**Build.** GitHub Actions builds `apps/agent/Dockerfile` with the repository root
+as its build context — npm workspaces keep a single lockfile there, so the image
+cannot be built from `apps/agent/` alone:
+
+```bash
+docker build -f apps/agent/Dockerfile --tag iris .
+```
+
+**Runtime layout.** The image is deliberately flat, and anything deploying it
+depends on that shape:
+
+| Path | What |
+|---|---|
+| `/app/dist` | compiled agent |
+| `/app/bin` | adapter wrappers, also shimmed into `/usr/local/bin` |
+| `/app/config` | **example** tenant registry only |
+| `/app/node_modules` | production dependencies |
+| `/app/package.json` | the agent's manifest (`"type": "module"`) |
+
+Verify after any change to the build:
+
+```bash
+docker run --rm --entrypoint ls iris -1 /app
+# bin config dist node_modules package.json
+```
+
+**Configuration.** The image carries only `config/*.example.yaml`. Real tenant
+configuration is mounted at runtime and pointed at by environment variables:
+
+| Variable | Meaning |
+|---|---|
+| `IRIS_TENANTS_PATH` | tenant registry, e.g. `/etc/iris/config/tenants.yaml` |
+| `IRIS_RESOURCES_PATH` | cross-tenant resource graph |
+| `IRIS_DB_PATH` | SQLite memory database |
+| `IRIS_TRANSCRIPT_DIR` | per-run transcripts |
+| `IRIS_NIGHTLY_CRON` | nightly sweep schedule (node-cron expression, `Europe/Berlin`). Default `30 2 * * *` (daily 02:30). Lower cost by widening it, e.g. `30 2 * * 1,3,5` for Mon/Wed/Fri — trades run frequency for detection lag. |
+| `IRIS_CATCHUP_STALE_HOURS` | startup catch-up fires if the last successful nightly is older than this. Default `24`. **Must be raised to cover the longest gap `IRIS_NIGHTLY_CRON` can produce** (e.g. `76` for Mon/Wed/Fri, covering the 72h Fri→Mon gap with margin) — otherwise a container restart on a between-run day fires an unplanned extra sweep and quietly erodes the savings from a sparser cron. |
+
+Mount the registry read-only; Watchfire never writes to it. The container runs as an
+unprivileged user, so the files must be world-readable (`0644`).
+
+🚨 **The image ships example configuration only.** `config/tenants.example.yaml` and
+`config/resources.example.yaml` are placeholders — deliberately, so that no operator's
+tenant data is baked into a published image. A container started without a real
+registry mounted, or without `IRIS_TENANTS_PATH` pointing at one, **will not start**:
+it exits naming the file it could not find. That is the intended failure; it is far
+better than silently sweeping four tenants that do not exist.
+
+**Rollout.** The reference deployment pulls the image on a timer and swaps the
+container when the tag resolves to a new digest, so a merge to the default branch
+reaches the host without anyone running a deploy. Pin the image to an immutable
+`sha-` tag to freeze a release; the pull then becomes a permanent no-op.
+
+Configuration, secret and compose changes are *not* covered by that timer — they
+are applied by the infrastructure repository's own deploy step.
+
+## The dashboard
+
+Azure Pipelines builds and deploys it; GitHub Actions never touches it. The
+pipeline definition lives at `apps/dashboard/ci/azure-pipelines.yml` and is scoped
+by a path filter, so agent-only commits do not trigger a dashboard deploy.
+
+**Packaging.** Next traces the standalone output from the workspace root, so its
+server lands at `.next/standalone/apps/dashboard/server.js` rather than at the
+root of `standalone/`. `apps/dashboard/ci/assemble-standalone.sh` rearranges that
+into what iisnode expects — the named-pipe wrapper and `web.config` at the
+deployment root, the Next server and its static assets beneath. Run it the same
+way locally as the pipeline does:
+
+```bash
+npm run build -w @watchfire/dashboard
+./apps/dashboard/ci/assemble-standalone.sh
+PORT=3123 node apps/dashboard/.next/standalone/server.js
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3123/api/health   # 200
+```
+
+`/api/health` is excluded from the auth gate; every other route redirects to
+sign-in.
+
+### Cutting the pipeline over to the monorepo
+
+The dashboard used to live in its own Azure DevOps repository. After the move, the
+pipeline must build from the monorepo instead. This is manual, one-time work in the
+Azure DevOps project:
+
+1. Create a **GitHub service connection** in the project (Project settings →
+   Service connections), granting access to the Watchfire repository.
+2. Edit the existing pipeline → **Settings** → repoint its source to the GitHub
+   repository, with the YAML path `apps/dashboard/ci/azure-pipelines.yml`.
+3. Set the pipeline variable `irisApiUrl` to the Watchfire API's public URL.
+4. Run the pipeline once from `main` and confirm the App Service serves the new
+   build.
+
+🚨 **Only then archive the old repository.** Archiving before a GitHub-sourced run
+has deployed successfully leaves the dashboard with no working deploy path.
+
+## What is not published
+
+The project's container images are not published. Build the agent image yourself
+from source: the image bundles the Claude Agent SDK and the Claude Code binary,
+which are proprietary and governed by Anthropic's own terms rather than this
+project's licence.

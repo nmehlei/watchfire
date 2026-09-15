@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(dirname "$here")"
+
+if [[ -f "$repo/dist/adapters/http/cli.js" ]]; then
+  exec node "$repo/dist/adapters/http/cli.js" "$@"
+elif [[ -f "$repo/src/adapters/http/cli.ts" ]]; then
+  exec npx --no-install tsx "$repo/src/adapters/http/cli.ts" "$@"
+else
+  echo "check-http: neither dist/ nor src/ cli.ts found" >&2
+  exit 2
+fi

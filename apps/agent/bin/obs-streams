@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(dirname "$here")"
+if [[ -f "$repo/dist/adapters/observability/cli-streams.js" ]]; then
+  exec node "$repo/dist/adapters/observability/cli-streams.js" "$@"
+elif [[ -f "$repo/src/adapters/observability/cli-streams.ts" ]]; then
+  exec npx --no-install tsx "$repo/src/adapters/observability/cli-streams.ts" "$@"
+else
+  echo "obs-streams: neither dist/ nor src/ cli found" >&2
+  exit 2
+fi

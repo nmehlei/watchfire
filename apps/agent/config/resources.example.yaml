@@ -1,0 +1,20 @@
+# Example Watchfire cross-tenant resource graph. See specs/02-tenants.md.
+#
+# Copy to config/resources.yaml (gitignored) and edit, or point
+# IRIS_RESOURCES_PATH at your own file.
+#
+# Only list resources shared across tenants — single-tenant resources default to
+# affects: [<owner>] automatically (see specs/07-reporting.md's affects expansion).
+
+resources:
+  - id: sql.acme.internal
+    type: mssql-server
+    owner: acme
+    affects: [acme, globex, initech]
+    notes: "Physical MSSQL box on acme Hetzner; hosts globex prod DB + initech staging."
+
+  - id: mail.acme.example
+    type: smtp-relay
+    owner: acme
+    affects: [acme, globex, initech, umbrella]
+    notes: "All outbound transactional mail routes through here."

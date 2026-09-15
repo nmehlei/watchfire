@@ -1,0 +1,119 @@
+name: build-and-push
+
+# Narrow by design. See Watchfire/specs/01-architecture.md §Publishing & deployment:
+# GitHub Actions builds and pushes the image to ghcr.io — nothing more.
+# No cloud credentials, no infrastructure apply, no deploy trigger. How a host
+# picks up a new image — and why configuration changes need their own deploy
+# step — is described in docs/deployment.md.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'apps/agent/**'
+      - 'infra/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/build-and-push.yml'
+      - '.dockerignore'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/agent/**'
+      - 'infra/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/build-and-push.yml'
+      - '.dockerignore'
+
+# Serialize runs for the same ref — avoid wasted parallel builds.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: lint + typecheck + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint -w @watchfire/agent
+
+      - name: Typecheck
+        run: npm run typecheck -w @watchfire/agent
+
+      - name: Test
+        run: npm run test -w @watchfire/agent
+
+  container-test:
+    name: test production runtime
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Test in the production container runtime
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/agent/Dockerfile
+          target: test
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  image:
+    name: build + push to ghcr.io
+    needs: container-test
+    # No image push on PRs from forks; they lack ghcr write access.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tags + labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/iris
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build + push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/agent/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

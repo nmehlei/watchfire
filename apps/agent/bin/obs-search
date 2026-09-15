@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(dirname "$here")"
+if [[ -f "$repo/dist/adapters/observability/cli-search.js" ]]; then
+  exec node "$repo/dist/adapters/observability/cli-search.js" "$@"
+elif [[ -f "$repo/src/adapters/observability/cli-search.ts" ]]; then
+  exec npx --no-install tsx "$repo/src/adapters/observability/cli-search.ts" "$@"
+else
+  echo "obs-search: neither dist/ nor src/ cli found" >&2
+  exit 2
+fi

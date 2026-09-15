@@ -1,0 +1,53 @@
+# macOS
+.DS_Store
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node / TypeScript build
+node_modules/
+dist/
+build/
+coverage/
+
+# Environment / secrets — real values never live in the repository.
+# Templates (.env.example) are committed on purpose.
+.env
+.env.*
+!.env.example
+
+# SQLite memory DB + WAL/SHM artifacts
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local run output
+/apps/agent/data/
+/apps/agent/transcripts/
+
+# Claude Code workspace state (locks, settings.local.json, transcripts)
+.claude/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+
+# Playwright
+test-results/
+playwright-report/
+
+# Local working notes, session state, and AI plans/specs (never published)
+/.local/
+/.superpowers/
+
+# Real tenant configuration — examples are committed, real files are not.
+# Production mounts the registry at runtime (IRIS_TENANTS_PATH).
+/apps/agent/config/tenants.yaml
+/apps/agent/config/resources.yaml
