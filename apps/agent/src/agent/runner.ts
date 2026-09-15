@@ -81,7 +81,7 @@ function toolResultText(msg: SDKMessage): string {
 }
 
 /**
- * Extract `___IRIS_OBS:` trailers from adapter output and persist them against
+ * Extract `___WATCHFIRE_OBS:` trailers from adapter output and persist them against
  * the current run (spec 03 §Observation emission).
  *
  * Best-effort: telemetry must never fail a run, so a bad trailer or a write
@@ -103,7 +103,7 @@ function persistObservationTrailers(db: Db, runId: number, msg: SDKMessage): voi
 function buildCanUseTool(state: MutableSafetyState): CanUseTool {
   return async (toolName, toolInput) => {
     // MCP tools (emit-finding, conclude-watch) always allowed — they're ours.
-    if (toolName.startsWith('mcp__iris__')) {
+    if (toolName.startsWith('mcp__watchfire__')) {
       return { behavior: 'allow', updatedInput: toolInput };
     }
 
@@ -154,7 +154,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
   }
 
   const mcpServer = createSdkMcpServer({
-    name: 'iris',
+    name: 'watchfire',
     version: '0.0.1',
     tools: mcpTools,
   });
@@ -171,9 +171,9 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
 
   // The SDK's runtime libc detection mis-identifies our Debian-slim image as
   // musl in some setups, then fails to exec the wrong native binary. The
-  // Docker image sets IRIS_CLAUDE_CODE_PATH to the correct (glibc) variant;
+  // Docker image sets WATCHFIRE_CLAUDE_CODE_PATH to the correct (glibc) variant;
   // when present, pass it through to bypass the SDK's auto-detection.
-  const claudeExecOverride = process.env['IRIS_CLAUDE_CODE_PATH'];
+  const claudeExecOverride = process.env['WATCHFIRE_CLAUDE_CODE_PATH'];
 
   const options: Options = {
     model: input.model ?? 'claude-haiku-4-5',
@@ -181,7 +181,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     maxTurns: input.maxTurns,
     ...(input.maxBudgetUsd !== undefined ? { maxBudgetUsd: input.maxBudgetUsd } : {}),
     ...(claudeExecOverride ? { pathToClaudeCodeExecutable: claudeExecOverride } : {}),
-    mcpServers: { iris: mcpServer },
+    mcpServers: { watchfire: mcpServer },
     tools: ['Bash'],
     canUseTool,
     abortController: abort,

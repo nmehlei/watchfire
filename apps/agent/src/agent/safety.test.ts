@@ -43,9 +43,9 @@ describe('hard-block patterns', () => {
     ['sh -c foo', 'shell -c'],
     ['echo hi > /dev/sda1', 'raw-disk'],
     ['echo hi > /dev/nvme0', 'raw-disk'],
-    ['cat /etc/iris/secrets/iris.env', 'secret'],
-    ['tail -n 5 /run/iris/kubeconfig', 'secret'],
-    ['base64 /run/iris/ssh-key', 'secret'],
+    ['cat /etc/watchfire/secrets/watchfire.env', 'secret'],
+    ['tail -n 5 /run/watchfire/kubeconfig', 'secret'],
+    ['base64 /run/watchfire/ssh-key', 'secret'],
     ['cat file &', 'background'],
     ['nohup cmd &', 'nohup'],
     ['disown %1', 'disown'],
@@ -53,7 +53,7 @@ describe('hard-block patterns', () => {
     ['exec > /tmp/log', 'exec'],
     ['chmod 777 file', 'chmod'],
     ['chmod a+rwx file', 'chmod'],
-    ['chown iris:iris foo', 'chown'],
+    ['chown watchfire:watchfire foo', 'chown'],
   ])('hard-blocks %s', (cmd) => {
     expectHard(cmd);
   });

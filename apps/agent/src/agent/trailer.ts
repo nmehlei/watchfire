@@ -1,4 +1,4 @@
-// Parsing for the `___IRIS_OBS:` stdout trailer (spec 03 §Observation emission).
+// Parsing for the `___WATCHFIRE_OBS:` stdout trailer (spec 03 §Observation emission).
 //
 // Adapters are Bash-invoked subprocesses with no DB handle and no run_id, so
 // they report measurements by appending trailer lines to stdout. The runner

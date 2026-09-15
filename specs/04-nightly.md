@@ -17,7 +17,7 @@ This spec does **not** own: memory schema (06), safety hook / adapter allowlists
 
 ## Trigger
 
-See `01-architecture.md`. Summary: cron `IRIS_NIGHTLY_CRON` (default `30 2 * * *`) Europe/Berlin, or startup catch-up if `MAX(started_at) WHERE type='nightly' AND status='success'` is NULL or older than `IRIS_CATCHUP_STALE_HOURS` (default 24h). A deployment that widens the cron gap must widen the catch-up threshold to match, or a restart on a between-run day fires an unplanned catch-up sweep.
+See `01-architecture.md`. Summary: cron `WATCHFIRE_NIGHTLY_CRON` (default `30 2 * * *`) Europe/Berlin, or startup catch-up if `MAX(started_at) WHERE type='nightly' AND status='success'` is NULL or older than `WATCHFIRE_CATCHUP_STALE_HOURS` (default 24h). A deployment that widens the cron gap must widen the catch-up threshold to match, or a restart on a between-run day fires an unplanned catch-up sweep.
 
 One nightly = one run = one agent session. No per-tenant sub-agents in v1 (settled during the seed conversation).
 
@@ -196,7 +196,7 @@ After the agent loop exits:
 3. Compose the digest (format owned by 07).
 4. Post to Telegram.
 5. Run retention sweep (06).
-6. Archive transcript to `/var/lib/iris/transcripts/<run_id>.jsonl`.
+6. Archive transcript to `/var/lib/watchfire/transcripts/<run_id>.jsonl`.
 7. Ping healthchecks.io.
 
 On `error`, steps 2 is skipped; all others still run. Partial findings are still persisted. The digest surfaces the error prominently (07's responsibility).
@@ -233,7 +233,7 @@ apps/agent/src/agent/
 
 ## Open questions
 
-- **`correlate-deep` shape.** SDK-registered tool (clean; runner knows about the Sonnet cost path explicitly) vs. `apps/agent/bin/` CLI with a stdout trailer like `___IRIS_USAGE: tokens_in=… tokens_out=…` (uniform with other adapters, but token accounting needs a parser). Tentative preference: `apps/agent/bin/` CLI — keeps the agent's view uniform. Decide before the Sonnet-escalation branch lands.
+- **`correlate-deep` shape.** SDK-registered tool (clean; runner knows about the Sonnet cost path explicitly) vs. `apps/agent/bin/` CLI with a stdout trailer like `___WATCHFIRE_USAGE: tokens_in=… tokens_out=…` (uniform with other adapters, but token accounting needs a parser). Tentative preference: `apps/agent/bin/` CLI — keeps the agent's view uniform. Decide before the Sonnet-escalation branch lands.
 - **Tenant-order dynamism.** Fixed order today (`acme → globex → initech → umbrella`). Should the order be informed by "which tenant had the loudest alerts in the last hour"? Cheap to implement, might reduce truncation bias against tenants late in the order. Defer until we see ordering actually bias findings.
 - **Per-tenant soft budget hint.** Add "aim for ~5 turns per tenant" to the sweep block? Pro: self-pacing; con: encourages shallow depth on noisy tenants. Defer until first real-run behavior is observable.
 - **Known-findings cutoff: 30 days vs. active-only.** Currently block 7 pulls findings with `last_seen_at > 30d OR state IN ('new','ongoing')` (06's seed query). A tighter variant — only `state IN ('new','ongoing')` — keeps the cache smaller but hides "this resolved last week, now it's back." Default: stick with the 30-day window until the cache starts costing real tokens.

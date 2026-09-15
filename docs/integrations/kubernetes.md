@@ -26,9 +26,9 @@ Read-only access to the initech production cluster: `view` ClusterRole + a narro
 
 The script (idempotent) will:
 
-1. Apply a `ServiceAccount` `iris-reader` in `kube-system`.
+1. Apply a `ServiceAccount` `watchfire-reader` in `kube-system`.
 2. Bind it to the built-in `view` ClusterRole.
-3. Apply a custom `iris-extra-read` ClusterRole (just `get/list/watch nodes`) and bind it.
+3. Apply a custom `watchfire-extra-read` ClusterRole (just `get/list/watch nodes`) and bind it.
 4. Mint a 720h (30-day) bound token via `kubectl create token`.
 5. Assemble a kubeconfig pointing at the cluster API with that token.
 6. Emit `KUBECONFIG_INITECH_B64=...` to **stdout**.

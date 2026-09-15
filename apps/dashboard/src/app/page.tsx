@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { Sparkline } from "@/components/Sparkline";
-import { irisJson } from "@/lib/watchfire";
+import { watchfireJson } from "@/lib/watchfire";
 import {
   AdapterHealth,
   CostWindow,
@@ -90,10 +90,10 @@ export default async function OverviewPage() {
     // Watchfire caps limit at 50 (spec 11 safety). Severity counts are
     // accurate up to that ceiling; if total active findings ever
     // exceeds 50, add a dedicated counts endpoint upstream.
-    safe(irisJson<unknown>("/api/findings?limit=50")),
-    safe(irisJson<unknown>("/api/runs?type=nightly&limit=1")),
-    safe(irisJson<unknown>("/api/cost-window?days=30")),
-    safe(irisJson<unknown>("/api/adapters/health")),
+    safe(watchfireJson<unknown>("/api/findings?limit=50")),
+    safe(watchfireJson<unknown>("/api/runs?type=nightly&limit=1")),
+    safe(watchfireJson<unknown>("/api/cost-window?days=30")),
+    safe(watchfireJson<unknown>("/api/adapters/health")),
   ]);
 
   const findings = findingsRes ? FindingsList.safeParse(findingsRes) : null;

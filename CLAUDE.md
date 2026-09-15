@@ -39,7 +39,7 @@ reading order:
 - `specs/05-watch.md` — webhook intake, triage budget, verdict protocol, rate limiting
 - `specs/06-memory.md` — SQLite schema, fingerprinting, lifecycle, retention, query patterns
 - `specs/07-reporting.md` — finding rendering, digest and page structure, Telegram send path
-- `specs/08-safety.md` — safety hook, iris-shell forced-command, audit
+- `specs/08-safety.md` — safety hook, watchfire-shell forced-command, audit
 - `specs/10-telegram-control.md` — Telegram bot command surface (mute / unmute / mutes / help)
 - `specs/11-mcp.md` — external read surfaces: MCP for Claude sessions, REST for the dashboard
 - `specs/12-dashboard.md` — Next.js dashboard (PWA, Entra ID, App Service)
@@ -103,7 +103,7 @@ What is built:
 - Watch: OpenObserve and Telegram webhooks, a bounded queue, a triage agent, page
   rendering, and mutes via Telegram commands.
 - API (spec 11): MCP at `/mcp` and a REST surface under `/api/` for findings, runs,
-  mutes, cost and adapter health — on the same Fastify server, gated by `IRIS_API_TOKEN`.
+  mutes, cost and adapter health — on the same Fastify server, gated by `WATCHFIRE_API_TOKEN`.
 - The dashboard, in `apps/dashboard/`.
 
 What is still ahead:
@@ -129,7 +129,7 @@ What is still ahead:
 - Do not add mutating capabilities "just in case" — they violate the report-only invariant.
 - Do not change the default model (`claude-haiku-4-5`) without approval — it sets the budget.
 - Do not add features not grounded in a spec section.
-- Do not loosen a safety-hook or `iris-shell` pattern without a reviewed spec change.
+- Do not loosen a safety-hook or `watchfire-shell` pattern without a reviewed spec change.
 
 ## When stuck
 

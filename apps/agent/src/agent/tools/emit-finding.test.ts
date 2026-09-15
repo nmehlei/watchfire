@@ -125,7 +125,7 @@ describe('createEmitFindingTool', () => {
     expect(firstContent.text).toContain('emit-finding failed');
   });
 
-  it('tool name is mcp__iris__emit_finding-compatible (bare name emit_finding)', () => {
+  it('tool name is mcp__watchfire__emit_finding-compatible (bare name emit_finding)', () => {
     const t = createEmitFindingTool(db, runId);
     expect(t.name).toBe('emit_finding');
   });

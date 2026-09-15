@@ -1,7 +1,7 @@
 # Example Watchfire tenant registry. See specs/02-tenants.md.
 #
 # Copy to config/tenants.yaml (gitignored) and edit, or point
-# IRIS_TENANTS_PATH at your own file. The tenants below are placeholders.
+# WATCHFIRE_TENANTS_PATH at your own file. The tenants below are placeholders.
 #
 # Secrets never live here — only environment-variable NAMES
 # (e.g. `token_env: OBS_TOKEN_ACME`). Provide the values to the process.

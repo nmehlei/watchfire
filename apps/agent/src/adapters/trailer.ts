@@ -1,10 +1,10 @@
-// Adapter side of the `___IRIS_OBS:` wire format (spec 03 §Observation emission).
+// Adapter side of the `___WATCHFIRE_OBS:` wire format (spec 03 §Observation emission).
 //
 // Adapters are subprocesses with no DB handle, so they report measurements by
 // appending trailer lines to stdout. The runner parses them back out — see
 // `src/agent/trailer.ts` for the consuming half.
 
-export const OBS_TRAILER_PREFIX = '___IRIS_OBS:';
+export const OBS_TRAILER_PREFIX = '___WATCHFIRE_OBS:';
 
 /** One measurement. `tenant` and `source` are shared across a render call. */
 export interface Measurement {

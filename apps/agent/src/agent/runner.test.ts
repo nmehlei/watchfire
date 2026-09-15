@@ -151,7 +151,7 @@ describe('runAgent — observation trailers', () => {
       [
         'api.acme.de',
         '  Valid: 2026-05-01 → 2026-08-30 (42 days remaining)',
-        '___IRIS_OBS: tenant=acme source=check-ssl subject=api.acme.de metric=days_until_expiry value=42',
+        '___WATCHFIRE_OBS: tenant=acme source=check-ssl subject=api.acme.de metric=days_until_expiry value=42',
       ].join('\n'),
     );
 
@@ -167,7 +167,7 @@ describe('runAgent — observation trailers', () => {
 
   it('tags observations with the current run id', async () => {
     const rows = await runAndReadObservations(
-      '___IRIS_OBS: tenant=acme source=check-ssl subject=a metric=m value=1',
+      '___WATCHFIRE_OBS: tenant=acme source=check-ssl subject=a metric=m value=1',
     );
 
     // The adapter never knows the run_id — the runner supplies it.
@@ -176,8 +176,8 @@ describe('runAgent — observation trailers', () => {
 
   it('persists trailers from several tool results across the run', async () => {
     const rows = await runAndReadObservations(
-      '___IRIS_OBS: tenant=acme source=check-http subject=a metric=response_ms value=120',
-      '___IRIS_OBS: tenant=globex source=check-http subject=b metric=response_ms value=2100',
+      '___WATCHFIRE_OBS: tenant=acme source=check-http subject=a metric=response_ms value=120',
+      '___WATCHFIRE_OBS: tenant=globex source=check-http subject=b metric=response_ms value=2100',
     );
 
     expect(rows).toHaveLength(2);
@@ -192,7 +192,7 @@ describe('runAgent — observation trailers', () => {
     const db = openMemoryDb();
     const runId = insertRun(db, { type: 'nightly', trigger: 'manual' });
     scriptedMessages = [
-      toolResultMessage('___IRIS_OBS: tenant=acme source=check-ssl subject=a metric=m value=NOPE'),
+      toolResultMessage('___WATCHFIRE_OBS: tenant=acme source=check-ssl subject=a metric=m value=NOPE'),
       resultMessage({}),
     ];
 

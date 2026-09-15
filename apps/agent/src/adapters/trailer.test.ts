@@ -9,8 +9,8 @@ describe('renderObservationTrailers', () => {
     ]);
 
     expect(out.split('\n')).toEqual([
-      '___IRIS_OBS: tenant=acme source=check-ssl subject=api.acme.de metric=days_until_expiry value=42',
-      '___IRIS_OBS: tenant=acme source=check-ssl subject=api.acme.de metric=chain_valid value=1',
+      '___WATCHFIRE_OBS: tenant=acme source=check-ssl subject=api.acme.de metric=days_until_expiry value=42',
+      '___WATCHFIRE_OBS: tenant=acme source=check-ssl subject=api.acme.de metric=chain_valid value=1',
     ]);
   });
 
@@ -43,6 +43,6 @@ describe('renderObservationTrailers', () => {
       { subject: 'b', metric: 'response_ms', value: 200 },
     ]);
 
-    expect(out).toBe('___IRIS_OBS: tenant=acme source=check-http subject=b metric=response_ms value=200');
+    expect(out).toBe('___WATCHFIRE_OBS: tenant=acme source=check-http subject=b metric=response_ms value=200');
   });
 });

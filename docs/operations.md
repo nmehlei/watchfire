@@ -12,9 +12,9 @@ findings", the owning spec is authoritative — the links point there.
 
 - **02:30 Europe/Berlin** — the nightly sweep runs, and a 🌙 digest lands in
   Telegram a few minutes later. Glance at it; act on anything 🔴 or new. The
-  schedule is `IRIS_NIGHTLY_CRON` (default `30 2 * * *`); the timezone is fixed
+  schedule is `WATCHFIRE_NIGHTLY_CRON` (default `30 2 * * *`); the timezone is fixed
   at `Europe/Berlin`. A sparser cron costs less and detects later — if you widen
-  it, raise `IRIS_CATCHUP_STALE_HOURS` to match, or a restart on a between-run
+  it, raise `WATCHFIRE_CATCHUP_STALE_HOURS` to match, or a restart on a between-run
   day fires an unplanned sweep. See [`deployment.md`](deployment.md).
 - **Occasionally** — a 🚨 page during the day, when an alert fired and triage
   judged it worth waking you for. Context is in the page; follow-up lands in the
@@ -22,7 +22,7 @@ findings", the owning spec is authoritative — the links point there.
 - **Monthly** — look at spend (see [Cost](#cost)).
 - **Quarterly** — check no credential is overdue for [rotation](#rotation).
 - **Yearly** — review the command allowlists in `apps/agent/src/agent/safety.ts`
-  and `infra/ssh/iris-shell.sh` against a year of real use.
+  and `infra/ssh/watchfire-shell.sh` against a year of real use.
 
 ## Looking inside
 
@@ -35,12 +35,12 @@ None of this touches your infrastructure. The only writes are mutes, which chang
 | `GET /health` | `{"ok":true}` when the process is up |
 | The dashboard | Findings, runs, mutes, cost and adapter health, live |
 | The REST API | The same data as JSON |
-| `/var/lib/iris/transcripts/<run_id>.jsonl` | The definitive record of what the agent did in one run |
+| `/var/lib/watchfire/transcripts/<run_id>.jsonl` | The definitive record of what the agent did in one run |
 | The SQLite database | Everything, if you need a query the API does not offer |
 
 ### The API
 
-Every route requires `Authorization: Bearer $IRIS_API_TOKEN`.
+Every route requires `Authorization: Bearer $WATCHFIRE_API_TOKEN`.
 
 | Route | Returns |
 |---|---|
@@ -64,11 +64,11 @@ without touching the running container, mount its volume read-only into a
 throwaway one:
 
 ```bash
-docker run --rm -it -v iris-data:/data:ro alpine \
-  sh -c 'apk add --no-cache sqlite >/dev/null && sqlite3 -readonly /data/iris.db'
+docker run --rm -it -v watchfire-data:/data:ro alpine \
+  sh -c 'apk add --no-cache sqlite >/dev/null && sqlite3 -readonly /data/watchfire.db'
 ```
 
-Replace `iris-data` with your deployment's volume name.
+Replace `watchfire-data` with your deployment's volume name.
 
 ## Cost
 
@@ -103,14 +103,14 @@ The budget target lives in [`specs/00-overview.md`](../specs/00-overview.md).
 
 Architecture in [`specs/02-tenants.md`](../specs/02-tenants.md). Checklist:
 
-1. Add the tenant to your registry — the file `IRIS_TENANTS_PATH` points at. Start
+1. Add the tenant to your registry — the file `WATCHFIRE_TENANTS_PATH` points at. Start
    from `apps/agent/config/tenants.example.yaml` for the shape. The registry holds
    environment-variable **names**, never values.
 2. Issue read-only credentials for each of the tenant's systems. Per-provider
    setup is in [`integrations/`](integrations/).
 3. Provide those values to the container under the names the registry declares.
 4. If the tenant owns or depends on a shared resource, add it to the file
-   `IRIS_RESOURCES_PATH` points at.
+   `WATCHFIRE_RESOURCES_PATH` points at.
 5. Restart the container. The registry is read at startup.
 6. Confirm in the next digest that the tenant was swept. If it was not, search that
    run's transcript for the tenant id to see whether the agent visited it.
@@ -118,32 +118,32 @@ Architecture in [`specs/02-tenants.md`](../specs/02-tenants.md). Checklist:
 ### Add a new target host
 
 For systems only reachable over SSH. Per
-[`specs/08-safety.md`](../specs/08-safety.md), every target gets a dedicated `iris`
+[`specs/08-safety.md`](../specs/08-safety.md), every target gets a dedicated `watchfire`
 user whose only possible command is the constrained shell.
 
 1. On the target, as root:
 
    ```bash
-   useradd -m -s /bin/bash iris
-   install -m 0755 -o root -g root infra/ssh/iris-shell.sh /usr/local/bin/iris-shell
-   mkdir -p /etc/iris
+   useradd -m -s /bin/bash watchfire
+   install -m 0755 -o root -g root infra/ssh/watchfire-shell.sh /usr/local/bin/watchfire-shell
+   mkdir -p /etc/watchfire
    # List the log and config paths this host may expose, one per line, in
-   # /etc/iris/paths.allow. Globs are expanded by iris-shell, not the shell.
+   # /etc/watchfire/paths.allow. Globs are expanded by watchfire-shell, not the shell.
    ```
 
-2. Append Watchfire's public key to `/home/iris/.ssh/authorized_keys`, pinned to the
+2. Append Watchfire's public key to `/home/watchfire/.ssh/authorized_keys`, pinned to the
    forced command:
 
    ```
-   command="/usr/local/bin/iris-shell",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-user-rc <iris-public-key>
+   command="/usr/local/bin/watchfire-shell",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-user-rc <watchfire-public-key>
    ```
 
 3. Verify both halves — that a permitted command works and a forbidden one is
    refused:
 
    ```bash
-   ssh -i <iris-private-key> iris@<host> "df -h"      # a disk report
-   ssh -i <iris-private-key> iris@<host> "rm -rf /"   # exit 2: command not permitted
+   ssh -i <watchfire-private-key> watchfire@<host> "df -h"      # a disk report
+   ssh -i <watchfire-private-key> watchfire@<host> "rm -rf /"   # exit 2: command not permitted
    ```
 
 4. Add the host to the tenant's `ssh_hosts` in your registry and restart.
@@ -164,7 +164,7 @@ Every credential follows the same shape, and the order matters:
 | Telegram bot token | No — strict cutover | `/health` is OK and the next digest arrives |
 | `OPENOBSERVE_USER` / `OPENOBSERVE_PASSWORD` | Depends on the auth backend | `obs-streams` lists streams |
 | Azure DevOps PAT (per tenant) | Yes, until the old one expires | `check-ado --tenant <id>` succeeds |
-| `IRIS_API_TOKEN` | No — also update the dashboard | The dashboard loads data |
+| `WATCHFIRE_API_TOKEN` | No — also update the dashboard | The dashboard loads data |
 | `TELEGRAM_WEBHOOK_SECRET` | No — re-register the webhook | A bot command gets a reply |
 | `OPENOBSERVE_WEBHOOK_SECRET` | No — update the OpenObserve alert too | A test alert is accepted |
 
@@ -179,7 +179,7 @@ triage runs, and every triage run costs money. Turn verification on:
 
 1. Configure the OpenObserve alert to sign outgoing webhooks and note the secret.
 2. Provide it to the container as `OPENOBSERVE_WEBHOOK_SECRET`.
-3. Make sure `IRIS_WEBHOOK_VERIFY=false` is **not** set — it forces verification off
+3. Make sure `WATCHFIRE_WEBHOOK_VERIFY=false` is **not** set — it forces verification off
    even when a secret is present.
 4. Restart, fire a test alert, and confirm it is accepted. Then send one with a wrong
    signature and confirm it gets `401`.
@@ -190,15 +190,15 @@ triage runs, and every triage run costs money. Turn verification on:
 
    ```bash
    docker compose down
-   docker run --rm -v iris-data:/src -v /tmp:/dst alpine tar czf /dst/iris-data.tgz -C /src .
+   docker run --rm -v watchfire-data:/src -v /tmp:/dst alpine tar czf /dst/watchfire-data.tgz -C /src .
    ```
 
-2. Copy `iris-data.tgz` and your registry files to the new host.
+2. Copy `watchfire-data.tgz` and your registry files to the new host.
 3. Restore the volume there:
 
    ```bash
-   docker volume create iris-data
-   docker run --rm -v iris-data:/dst -v /tmp:/src alpine tar xzf /src/iris-data.tgz -C /dst
+   docker volume create watchfire-data
+   docker run --rm -v watchfire-data:/dst -v /tmp:/src alpine tar xzf /src/watchfire-data.tgz -C /dst
    ```
 
 4. Start Watchfire with the same environment and mounts, and repoint DNS.
@@ -234,7 +234,7 @@ Work down this list:
    | no recent row at all | The schedule did not fire | The process may be wedged — restart it |
 
 On startup, Watchfire runs a catch-up nightly if the last completed one is older than
-`IRIS_CATCHUP_STALE_HOURS` (default 24), so a restart is also the quickest way to get
+`WATCHFIRE_CATCHUP_STALE_HOURS` (default 24), so a restart is also the quickest way to get
 a missed digest back — and why that value has to track your cron.
 
 ### Safety block
@@ -286,7 +286,7 @@ the database — a mute is reversible and leaves a record.
 1. Send a test webhook:
 
    ```bash
-   curl -i -X POST https://<your-iris-host>/webhook/openobserve \
+   curl -i -X POST https://<your-watchfire-host>/webhook/openobserve \
         -H "Content-Type: application/json" \
         -d '<a payload in your OpenObserve alert template's shape>'
    ```
@@ -321,13 +321,13 @@ Transcripts are the audit record for safety reviews and cannot be rebuilt, so
 nothing deletes them automatically. Watch their size:
 
 ```bash
-du -sh /var/lib/iris/transcripts
+du -sh /var/lib/watchfire/transcripts
 ```
 
 Prune only once you are sure nothing in the deleted window is under review:
 
 ```bash
-find /var/lib/iris/transcripts -name '*.jsonl' -mtime +365 -delete
+find /var/lib/watchfire/transcripts -name '*.jsonl' -mtime +365 -delete
 ```
 
 ## Alerting

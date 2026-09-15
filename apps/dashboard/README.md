@@ -16,8 +16,8 @@ npm ci
 
 # 2. Local env — copy template + fill in real values
 cp .env.example .env.local
-# AAD_* come from `terraform output` in your-iac-repo/solutions/iris-dashboard
-# IRIS_API_TOKEN is the same bearer Watchfire itself uses
+# AAD_* come from `terraform output` in your-iac-repo/solutions/watchfire-dashboard
+# WATCHFIRE_API_TOKEN is the same bearer Watchfire itself uses
 # AUTH_SECRET: openssl rand -base64 32
 
 # 3. Run
@@ -25,7 +25,7 @@ npm run dev
 # http://localhost:3000 — middleware will redirect to Microsoft sign-in
 ```
 
-The AAD app registration includes `http://localhost:3000/api/auth/callback/microsoft-entra-id` only if you add it as a redirect URI in `your-iac-repo/solutions/iris-dashboard/terraform/main.tf` — currently it lists the App Service hostname and the custom domain only, so local sign-in won't complete until that's amended.
+The AAD app registration includes `http://localhost:3000/api/auth/callback/microsoft-entra-id` only if you add it as a redirect URI in `your-iac-repo/solutions/watchfire-dashboard/terraform/main.tf` — currently it lists the App Service hostname and the custom domain only, so local sign-in won't complete until that's amended.
 
 ## Scripts
 
@@ -43,9 +43,9 @@ The AAD app registration includes `http://localhost:3000/api/auth/callback/micro
 CI: `ci/azure-pipelines.yml` on Azure DevOps. On push to `main`:
 
 1. Build stage runs `npm ci`, lint, typecheck, test, `next build`, assembles the standalone tree, publishes a zip artifact.
-2. Deploy stage uses the `iris-dashboard-deploy-sc` Azure RM service connection (`Website Contributor` on `iris-dashboard-RG`) to push via `AzureWebApp@1` with `deploymentMethod: zipDeploy` and `startUpCommand: node server.js`.
+2. Deploy stage uses the `watchfire-dashboard-deploy-sc` Azure RM service connection (`Website Contributor` on `watchfire-dashboard-RG`) to push via `AzureWebApp@1` with `deploymentMethod: zipDeploy` and `startUpCommand: node server.js`.
 
-Infrastructure (RG, Web App, AAD app, custom domain, cert) lives in `your-iac-repo/solutions/iris-dashboard/`. Application code never touches Azure resources directly — Terraform owns them.
+Infrastructure (RG, Web App, AAD app, custom domain, cert) lives in `your-iac-repo/solutions/watchfire-dashboard/`. Application code never touches Azure resources directly — Terraform owns them.
 
 ## Project layout
 
@@ -58,12 +58,12 @@ src/
     page.tsx                    Overview placeholder (real overview lands next)
     api/
       auth/[...nextauth]/       Auth.js GET + POST handlers
-      iris/[...path]/           BFF proxy → Watchfire, bearer-injecting
+      watchfire/[...path]/           BFF proxy → Watchfire, bearer-injecting
       events/                   SSE proxy → Watchfire /api/events
       health/                   Public liveness probe (excluded from auth gate)
   lib/
     env.ts                      Server-side env validation (zod)
-    iris.ts                     `irisFetch` + `irisJson` helpers (server-only)
+    watchfire.ts                     `watchfireFetch` + `watchfireJson` helpers (server-only)
 public/
   manifest.json                 PWA manifest (icons TBD)
   sw.js                         Placeholder service worker

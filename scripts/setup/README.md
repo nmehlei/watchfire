@@ -16,13 +16,13 @@ See [`docs/integrations/`](../../docs/integrations/README.md) for the per-integr
 | `openobserve-verify.sh` | Probe the OO credential against each tenant's org. | `OPENOBSERVE_*` set in env. |
 | `hetzner-verify.sh` | Probe each `HCLOUD_TOKEN_*` with a benign read call. | `HCLOUD_TOKEN_*` set in env. |
 | `kubeconfig.sh` | Create a read-only SA in a cluster, mint a token, emit a base64 kubeconfig. | `kubectl` cluster-admin on the target context. |
-| `ssh-keygen-iris.sh` | Generate (or reuse) `infra/ssh/iris_ed25519`, emit pubkey + base64 private key. | None. |
+| `ssh-keygen-watchfire.sh` | Generate (or reuse) `infra/ssh/watchfire_ed25519`, emit pubkey + base64 private key. | None. |
 
 ## Pattern
 
 ```bash
 # Append env to local .env
-./scripts/setup/azure-sp.sh iris-reader-main <sub-id> >> .env
+./scripts/setup/azure-sp.sh watchfire-reader-main <sub-id> >> .env
 
 # Or pipe to clipboard for ansible-vault paste
 ./scripts/setup/kubeconfig.sh --context <kube-context> | pbcopy

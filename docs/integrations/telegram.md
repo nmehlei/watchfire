@@ -14,7 +14,7 @@ Outbound channel for digests (🌙) and pages (🚨). Spec ref: [`07-reporting.m
 ## One-time setup
 
 1. Open Telegram, message **@BotFather**.
-2. `/newbot` → choose name (e.g. `Watchfire Watcher`) and username (must end in `bot`, e.g. `iris_acme_bot`).
+2. `/newbot` → choose name (e.g. `Watchfire Watcher`) and username (must end in `bot`, e.g. `watchfire_acme_bot`).
 3. Copy the token. → `TELEGRAM_BOT_TOKEN`.
 4. Start a chat with the bot (search by username, send `/start`). Without this the bot cannot DM you.
 5. Get your chat ID:

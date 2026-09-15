@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { verifyBearer } from '../shared/auth.js';
 import { emitApiAudit, type ApiAuditLogger } from '../shared/audit.js';
-import { getEventBus, type IrisEventName, type IrisEventPayload } from './bus.js';
+import { getEventBus, type WatchfireEventName, type WatchfireEventPayload } from './bus.js';
 
 export interface EventsRouteConfig {
   apiToken: string;
@@ -9,7 +9,7 @@ export interface EventsRouteConfig {
 }
 
 const HEARTBEAT_MS = 25_000;
-const ALL_EVENTS: IrisEventName[] = [
+const ALL_EVENTS: WatchfireEventName[] = [
   'nightly.completed',
   'watch.completed',
   'mute.created',
@@ -39,8 +39,8 @@ export function registerEventsRoute(app: FastifyInstance, cfg: EventsRouteConfig
     reply.raw.write(': connected\n\n');
 
     const bus = getEventBus();
-    type Listener = (p: IrisEventPayload[IrisEventName]) => void;
-    const listeners: Array<{ name: IrisEventName; fn: Listener }> = [];
+    type Listener = (p: WatchfireEventPayload[WatchfireEventName]) => void;
+    const listeners: Array<{ name: WatchfireEventName; fn: Listener }> = [];
 
     for (const name of ALL_EVENTS) {
       const fn: Listener = (payload) => {
@@ -51,7 +51,7 @@ export function registerEventsRoute(app: FastifyInstance, cfg: EventsRouteConfig
           // connection closed; cleanup happens via 'close' handler below
         }
       };
-      bus.on(name, fn as (p: IrisEventPayload[typeof name]) => void);
+      bus.on(name, fn as (p: WatchfireEventPayload[typeof name]) => void);
       listeners.push({ name, fn });
     }
 
@@ -66,7 +66,7 @@ export function registerEventsRoute(app: FastifyInstance, cfg: EventsRouteConfig
     reply.raw.on('close', () => {
       clearInterval(heartbeat);
       for (const { name, fn } of listeners) {
-        bus.off(name, fn as (p: IrisEventPayload[typeof name]) => void);
+        bus.off(name, fn as (p: WatchfireEventPayload[typeof name]) => void);
       }
     });
   });

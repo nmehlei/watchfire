@@ -54,7 +54,7 @@ function printHelp(): void {
   process.stdout.write(
     [
       'Usage: check-ssl --tenant <id> [--host <host>] [--timeout <ms>] [--tenants-path <path>]',
-      '  --tenants-path <path>  tenant registry (default: $IRIS_TENANTS_PATH, else config/tenants.yaml)',
+      '  --tenants-path <path>  tenant registry (default: $WATCHFIRE_TENANTS_PATH, else config/tenants.yaml)',
       '',
       'Probes every ssl.hosts entry for the tenant (or just --host if given).',
       'Reports: expiry date, days remaining, chain validity, SNI/hostname match.',

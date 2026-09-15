@@ -44,18 +44,18 @@ WORKDIR /app
 
 # Minimal shell utilities used by bin/ wrappers. `openssl` ships in the
 # base image already; keeping this image lean.
-RUN groupadd --system iris \
-    && useradd --system --gid iris --home-dir /home/iris --create-home --shell /usr/sbin/nologin iris \
-    && mkdir -p /var/lib/iris /run/iris /etc/iris \
-    && chown -R iris:iris /var/lib/iris /run/iris /home/iris
+RUN groupadd --system watchfire \
+    && useradd --system --gid watchfire --home-dir /home/watchfire --create-home --shell /usr/sbin/nologin watchfire \
+    && mkdir -p /var/lib/watchfire /run/watchfire /etc/watchfire \
+    && chown -R watchfire:watchfire /var/lib/watchfire /run/watchfire /home/watchfire
 
-COPY --from=compile --chown=iris:iris /app/apps/agent/dist ./dist
-COPY --from=compile --chown=iris:iris /app/node_modules ./node_modules
-COPY --from=compile --chown=iris:iris /app/apps/agent/package.json ./package.json
-COPY --chown=iris:iris apps/agent/bin ./bin
+COPY --from=compile --chown=watchfire:watchfire /app/apps/agent/dist ./dist
+COPY --from=compile --chown=watchfire:watchfire /app/node_modules ./node_modules
+COPY --from=compile --chown=watchfire:watchfire /app/apps/agent/package.json ./package.json
+COPY --chown=watchfire:watchfire apps/agent/bin ./bin
 # Examples only. The real registry is mounted at runtime and pointed at by
-# IRIS_TENANTS_PATH / IRIS_RESOURCES_PATH — never bake it into the image.
-COPY --chown=iris:iris apps/agent/config ./config
+# WATCHFIRE_TENANTS_PATH / WATCHFIRE_RESOURCES_PATH — never bake it into the image.
+COPY --chown=watchfire:watchfire apps/agent/config ./config
 
 RUN chmod +x /app/bin/* \
     && for f in /app/bin/*; do \
@@ -64,10 +64,10 @@ RUN chmod +x /app/bin/* \
          chmod +x "/usr/local/bin/$name"; \
        done
 
-USER iris
+USER watchfire
 ENV NODE_ENV=production
 # Adapters resolvable two ways:
-#   1. /app/bin (in PATH for the iris user when shells inherit ENV)
+#   1. /app/bin (in PATH for the watchfire user when shells inherit ENV)
 #   2. /usr/local/bin/<name> shims that exec the real script — these are
 #      reachable even when the Claude SDK sanitizes its Bash subprocess'
 #      PATH (the SDK does that for security). Shims preserve $0 → /app/bin
@@ -77,6 +77,6 @@ ENV PATH="/app/bin:${PATH}"
 # libc detection mis-identifies bookworm-slim as musl in some setups and
 # tries to exec the (broken on glibc) musl variant. Runner reads this env
 # var and passes it as pathToClaudeCodeExecutable to query().
-ENV IRIS_CLAUDE_CODE_PATH=/app/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude
+ENV WATCHFIRE_CLAUDE_CODE_PATH=/app/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude
 EXPOSE 8080
 CMD ["node", "dist/index.js"]

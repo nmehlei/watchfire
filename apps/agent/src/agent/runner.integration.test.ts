@@ -2,7 +2,7 @@
 //
 // OFF by default (no API key in CI). Runs when:
 //   ANTHROPIC_API_KEY is set (loaded from .env or the environment) AND
-//   IRIS_RUN_AGENT_INTEGRATION=1
+//   WATCHFIRE_RUN_AGENT_INTEGRATION=1
 //
 // Cost budget: maxBudgetUsd=0.05 (~5 cents). maxTurns=3.
 //
@@ -22,7 +22,7 @@ try {
 }
 
 const shouldRun =
-  !!process.env['ANTHROPIC_API_KEY'] && process.env['IRIS_RUN_AGENT_INTEGRATION'] === '1';
+  !!process.env['ANTHROPIC_API_KEY'] && process.env['WATCHFIRE_RUN_AGENT_INTEGRATION'] === '1';
 
 describe.skipIf(!shouldRun)('runAgent — integration', () => {
   it(

@@ -150,7 +150,7 @@ describe('watch server', () => {
     await app.close();
   });
 
-  it('IRIS_WEBHOOK_VERIFY=false bypasses even with secret set', async () => {
+  it('WATCHFIRE_WEBHOOK_VERIFY=false bypasses even with secret set', async () => {
     const app = createWatchServer({
       tenants: TENANTS,
       queue,

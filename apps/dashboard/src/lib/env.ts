@@ -7,8 +7,8 @@ import { z } from "zod";
  * to the browser.
  */
 const ServerEnv = z.object({
-  IRIS_API_URL: z.string().url(),
-  IRIS_API_TOKEN: z.string().min(1),
+  WATCHFIRE_API_URL: z.string().url(),
+  WATCHFIRE_API_TOKEN: z.string().min(1),
 
   AUTH_SECRET: z.string().min(1),
   AUTH_MICROSOFT_ENTRA_ID_ID: z.string().min(1),

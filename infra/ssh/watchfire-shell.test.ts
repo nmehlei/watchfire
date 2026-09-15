@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-const SHELL = fileURLToPath(new URL('./iris-shell.sh', import.meta.url));
+const SHELL = fileURLToPath(new URL('./watchfire-shell.sh', import.meta.url));
 
 interface RunResult {
   code: number;
@@ -17,7 +17,7 @@ let tempDir: string;
 let pathsAllow: string;
 
 beforeAll(() => {
-  tempDir = mkdtempSync(join(tmpdir(), 'iris-shell-test-'));
+  tempDir = mkdtempSync(join(tmpdir(), 'watchfire-shell-test-'));
   pathsAllow = join(tempDir, 'paths.allow');
   writeFileSync(
     pathsAllow,
@@ -38,7 +38,7 @@ function run(sshOriginalCommand: string): RunResult {
     env: {
       ...process.env,
       SSH_ORIGINAL_COMMAND: sshOriginalCommand,
-      IRIS_PATHS_ALLOW: pathsAllow,
+      WATCHFIRE_PATHS_ALLOW: pathsAllow,
     },
     encoding: 'utf8',
     timeout: 5000,
@@ -50,11 +50,11 @@ function run(sshOriginalCommand: string): RunResult {
   };
 }
 
-describe('iris-shell — denial', () => {
+describe('watchfire-shell — denial', () => {
   it('empty command exits 2', () => {
     const r = run('');
     expect(r.code).toBe(2);
-    expect(r.stderr).toMatch(/iris-shell: no command/);
+    expect(r.stderr).toMatch(/watchfire-shell: no command/);
   });
 
   it.each([
@@ -67,7 +67,7 @@ describe('iris-shell — denial', () => {
   ])('denies %s', (cmd) => {
     const r = run(cmd);
     expect(r.code).toBe(2);
-    expect(r.stderr).toMatch(/iris-shell: command not permitted/);
+    expect(r.stderr).toMatch(/watchfire-shell: command not permitted/);
   });
 
   it('denies journalctl without --since', () => {
@@ -113,16 +113,16 @@ describe('iris-shell — denial', () => {
   });
 });
 
-describe('iris-shell — permit (dispatch OK, exec may still succeed/fail)', () => {
+describe('watchfire-shell — permit (dispatch OK, exec may still succeed/fail)', () => {
   // We can't reliably exec these in a test sandbox (df/free might not exist
-  // in minimal containers), so we test that iris-shell's gate passes.
+  // in minimal containers), so we test that watchfire-shell's gate passes.
   // Strategy: override PATH to point at a stub dir that returns 0.
 
   let stubDir: string;
   const stubCommand = (name: string) => join(stubDir, name);
 
   beforeAll(() => {
-    stubDir = mkdtempSync(join(tmpdir(), 'iris-shell-stubs-'));
+    stubDir = mkdtempSync(join(tmpdir(), 'watchfire-shell-stubs-'));
     for (const name of ['df', 'free', 'uptime', 'journalctl', 'tail', 'ps', 'ss', 'systemctl', 'cat']) {
       writeFileSync(
         stubCommand(name),
@@ -150,7 +150,7 @@ describe('iris-shell — permit (dispatch OK, exec may still succeed/fail)', () 
         ...process.env,
         PATH: `${stubDir}:${process.env['PATH']}`,
         SSH_ORIGINAL_COMMAND: cmd,
-        IRIS_PATHS_ALLOW: pathsAllow,
+        WATCHFIRE_PATHS_ALLOW: pathsAllow,
       },
       encoding: 'utf8',
       timeout: 5000,

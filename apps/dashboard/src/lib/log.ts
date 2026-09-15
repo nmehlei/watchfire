@@ -10,7 +10,7 @@ interface LogFields {
 /**
  * Structured JSON logger. Goes to stdout, where the App Service Log
  * Stream picks it up and the OTel collector forwards to OpenObserve
- * (stream "iris-dashboard.*", separate from "iris.*"). Spec 12
+ * (stream "watchfire-dashboard.*", separate from "watchfire.*"). Spec 12
  * §Observability.
  *
  * Always JSON on a single line — easier to parse and correlate.
@@ -20,7 +20,7 @@ function emit(level: Level, message: string, fields: LogFields = {}): void {
     ts: new Date().toISOString(),
     level,
     msg: message,
-    service: "iris-dashboard",
+    service: "watchfire-dashboard",
     ...fields,
   };
   const line = JSON.stringify(entry);

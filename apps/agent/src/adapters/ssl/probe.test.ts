@@ -29,7 +29,7 @@ describe('hostnameMatches', () => {
 
 // Integration test: probe a public host. Skipped when offline.
 // We use a short timeout so offline runs fail quickly into the skip branch.
-const runNetworkTests = !process.env['IRIS_SKIP_NETWORK_TESTS'];
+const runNetworkTests = !process.env['WATCHFIRE_SKIP_NETWORK_TESTS'];
 
 describe.skipIf(!runNetworkTests)('probeCert — integration', () => {
   it('fetches a real certificate from example.com', async () => {
@@ -48,7 +48,7 @@ describe.skipIf(!runNetworkTests)('probeCert — integration', () => {
   }, 15000);
 
   it('reports error cleanly when the host does not exist', async () => {
-    const result = await probeCert('nonexistent.invalid.iris-test', { timeoutMs: 3000 });
+    const result = await probeCert('nonexistent.invalid.watchfire-test', { timeoutMs: 3000 });
     expect(result.connected).toBe(false);
     expect(result.error).toBeTruthy();
   }, 10000);

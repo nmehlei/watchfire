@@ -4,11 +4,11 @@
 
 A Next.js web app that gives the operator a real overview of Watchfire — current findings, run history, mutes, cost trend, adapter health — installable as a PWA on the operator's phone. Consumes Watchfire's API surfaces (spec 11) server-side; the bearer token never leaves the dashboard's App Service environment.
 
-The killer use case: operator gets a Telegram ping, opens the dashboard on their phone, has the full picture in 5 seconds. Beyond that, the dashboard is the canonical "how is Watchfire doing?" status board — replaces the implicit knowledge that today lives in `git log` + `sqlite3 iris.db` over SSH.
+The killer use case: operator gets a Telegram ping, opens the dashboard on their phone, has the full picture in 5 seconds. Beyond that, the dashboard is the canonical "how is Watchfire doing?" status board — replaces the implicit knowledge that today lives in `git log` + `sqlite3 watchfire.db` over SSH.
 
 This spec owns:
 
-- Repo + deploy shape (the `apps/dashboard/` workspace here, built by Azure Pipelines; infrastructure in the IaC repo's `solutions/iris-dashboard/`)
+- Repo + deploy shape (the `apps/dashboard/` workspace here, built by Azure Pipelines; infrastructure in the IaC repo's `solutions/watchfire-dashboard/`)
 - Hosting (existing Windows App Service plan, native Node.js, no container)
 - User-facing auth (Entra ID via ACME AAD tenant, single-operator gate)
 - Page surface and per-page data flow
@@ -38,23 +38,23 @@ This spec **does not** own: the Watchfire API contract itself (that's `specs/11-
                                   │
                                   ▼
                 ┌─────────────────────────────────────────┐
-                │  iris-dashboard.example.com             │
+                │  watchfire-dashboard.example.com             │
                 │  (Windows App Service, native Node ≥22) │
                 │                                         │
                 │  Next.js 15 (latest stable)             │
                 │  ├─ RSC pages (overview, findings, ...) │
                 │  ├─ Client components (filters, search) │
-                │  ├─ /api/iris/[...] BFF proxy           │
+                │  ├─ /api/watchfire/[...] BFF proxy           │
                 │  ├─ /api/events SSE proxy               │
                 │  └─ /api/auth/[...nextauth] Auth.js     │
                 │                                         │
-                │  IRIS_API_TOKEN in app_settings         │
+                │  WATCHFIRE_API_TOKEN in app_settings         │
                 │  (server-side only, never reaches DOM)  │
                 └─────────────────────────────────────────┘
                                   │
                           Authorization: Bearer …
                                   ▼
-                       https://iris.example.com
+                       https://watchfire.example.com
                           (Watchfire — spec 11)
 ```
 
@@ -70,13 +70,13 @@ Three boundaries:
 
 Azure Pipelines remains its CI/CD — GitHub Actions builds only the agent image. Because the pipeline's source must be repointed at the monorepo by hand (a GitHub service connection in the Azure DevOps project), see `docs/deployment.md` for the cutover, and do not archive the old repository until a GitHub-sourced run has deployed successfully.
 
-**Infrastructure: `your-iac-repo/solutions/iris-dashboard/`.** Two repos total. Layout follows `app-service-plan-metrics-forwarder`:
+**Infrastructure: `your-iac-repo/solutions/watchfire-dashboard/`.** Two repos total. Layout follows `app-service-plan-metrics-forwarder`:
 
 ```
-your-iac-repo/solutions/iris-dashboard/
+your-iac-repo/solutions/watchfire-dashboard/
   terraform/                # App Service, custom domain, AAD app reg, DNS
   ansible/                  # (none — App Service deploy is via pipeline, no host config)
-  secrets.enc.yaml          # SOPS+age encrypted: IRIS_API_TOKEN, AAD client secret
+  secrets.enc.yaml          # SOPS+age encrypted: WATCHFIRE_API_TOKEN, AAD client secret
   edit-secrets.sh           # SOPS edit wrapper
   deploy.sh                 # decrypt secrets → terraform apply
   README.md
@@ -98,7 +98,7 @@ your-iac-repo/solutions/iris-dashboard/
 
 - **Existing Windows App Service plan**, native Node.js runtime stack (LTS Node ≥ 22).
 - **No container.** Next.js `output: 'standalone'` produces a self-contained `server.js`; App Service runs it as the startup command.
-- **Hostname: `iris-dashboard.example.com`** → CNAME to App Service default hostname (Azure DNS, Terraform via the existing `modules/azure/cname_record`).
+- **Hostname: `watchfire-dashboard.example.com`** → CNAME to App Service default hostname (Azure DNS, Terraform via the existing `modules/azure/cname_record`).
 - **TLS: App Service managed certificate** (free for custom domains on B1+).
 - **Always On**: enabled.
 
@@ -108,7 +108,7 @@ Entra ID via the ACME AAD tenant, gated to a single user.
 
 ### Sign-in flow
 
-1. Operator opens `https://iris-dashboard.example.com`.
+1. Operator opens `https://watchfire-dashboard.example.com`.
 2. Auth.js middleware detects no session → redirects to Microsoft sign-in (PKCE flow, mobile-friendly).
 3. After Microsoft auth → callback to `/api/auth/callback/microsoft-entra-id`.
 4. Auth.js mints a session cookie. JWT strategy (no DB needed at this scale).
@@ -142,7 +142,7 @@ Provider: `MicrosoftEntraID` (was `azure-ad` in v4). Tenant ID + client ID from 
 | `/mutes` | RSC | **Active mutes**. Per-row unmute. |
 | `/search` | client | **Search**. LIKE-search title + resource_id, live as you type, debounced 200ms. |
 | `/api/auth/[...nextauth]` | Auth.js | Sign-in / callback / sign-out. |
-| `/api/iris/[...path]` | route handler | Generic BFF proxy: `GET /api/iris/findings/abc` → `GET https://iris.example.com/api/findings/abc` with bearer injected. |
+| `/api/watchfire/[...path]` | route handler | Generic BFF proxy: `GET /api/watchfire/findings/abc` → `GET https://watchfire.example.com/api/findings/abc` with bearer injected. |
 | `/api/events` | route handler | SSE proxy: dashboard server opens an EventSource to Watchfire, pipes events through to client. |
 
 **Mobile layout** (default for screen widths < 768px):
@@ -162,14 +162,14 @@ Provider: `MicrosoftEntraID` (was `azure-ad` in v4). Tenant ID + client ID from 
 
 **Server-rendered pages** (`/`, `/findings`, `/findings/[id]`, `/runs`, `/runs/[id]`, `/mutes`):
 
-- Next.js fetches in the RSC using `lib/iris.ts::irisFetch(path)` — a thin wrapper around `fetch` that injects the bearer and sets `cache: 'no-store'`.
+- Next.js fetches in the RSC using `lib/watchfire.ts::watchfireFetch(path)` — a thin wrapper around `fetch` that injects the bearer and sets `cache: 'no-store'`.
 - Stale-page risk is handled by the SSE-driven invalidation (see §Real-time below).
 
 **Client interactivity** (filters, search, mute toggle):
 
-- Client components use **TanStack Query** with `fetch('/api/iris/...')` → BFF route handler → Watchfire.
+- Client components use **TanStack Query** with `fetch('/api/watchfire/...')` → BFF route handler → Watchfire.
 - Query keys factored in `src/lib/queryKeys.ts` so the SSE listener can invalidate precisely.
-- Mute toggle uses a server action: form submit → server-side `irisFetch` POST → on success, `revalidatePath` for the affected page + emit a local `mute.created` to the SSE bus (which Watchfire will also broadcast, but the local emit gives the caller immediate UI feedback).
+- Mute toggle uses a server action: form submit → server-side `watchfireFetch` POST → on success, `revalidatePath` for the affected page + emit a local `mute.created` to the SSE bus (which Watchfire will also broadcast, but the local emit gives the caller immediate UI feedback).
 
 **Caching**: client-side only via TanStack Query (5s stale time on lists, 30s on the overview, infinite on finding detail until invalidated by SSE). Server-side `cache: 'no-store'` everywhere — we never want stale data on the server.
 
@@ -229,8 +229,8 @@ The dashboard requires **new endpoints + MCP tools** not in spec 11 v1. These ge
 
 ### Dashboard client side
 
-- `src/lib/sse.ts` — `useIrisEvents()` hook that opens an `EventSource('/api/events')`.
-- The dashboard's `/api/events` route handler opens its own `EventSource('https://iris.example.com/api/events', { headers: { Authorization: 'Bearer …' } })` and pipes events through to the client. Bearer never reaches the browser.
+- `src/lib/sse.ts` — `useWatchfireEvents()` hook that opens an `EventSource('/api/events')`.
+- The dashboard's `/api/events` route handler opens its own `EventSource('https://watchfire.example.com/api/events', { headers: { Authorization: 'Bearer …' } })` and pipes events through to the client. Bearer never reaches the browser.
 - In `app/layout.tsx`'s root client component, on each event, invalidate the relevant TanStack Query keys.
 - **Reconnection**: `EventSource` auto-reconnects. On reconnect, dashboard force-refetches all open queries (no Last-Event-ID replay in v1; we accept "missed events while disconnected → refetch on reconnect").
 
@@ -271,7 +271,7 @@ Capture `beforeinstallprompt`, surface a small "Install app" button in the overv
 
 ## Observability
 
-- **Server logs**: structured JSON to stdout. App Service Log Stream picks up; OpenTelemetry collector forwards to OpenObserve, stream `iris-dashboard.*` (separate from `iris.*`).
+- **Server logs**: structured JSON to stdout. App Service Log Stream picks up; OpenTelemetry collector forwards to OpenObserve, stream `watchfire-dashboard.*` (separate from `watchfire.*`).
 - **Request correlation**: dashboard generates a `traceparent` per incoming request, forwards it to Watchfire in an `x-trace-id` header. Both sides log the same id. Cross-stream queries in OpenObserve give a complete request flow.
 - **Errors**: server-side errors logged with stack; user-facing pages render a generic error screen with a "copy error code" button (the trace id).
 - **No App Insights** — OpenObserve is the single observability backend across the ACME stack.
@@ -280,7 +280,7 @@ Capture `beforeinstallprompt`, surface a small "Install app" button in the overv
 
 - **Vitest** for unit + component tests. Test files alongside code (`Button.test.tsx` next to `Button.tsx`).
 - **Playwright** for E2E in `tests/e2e/`. Specs cover: sign-in flow, finding detail render, mute toggle round-trip, SSE event reception, offline banner appearance.
-- **MSW** to mock Watchfire in component tests — intercept `fetch('/api/iris/*')` and return canned DTOs from fixtures.
+- **MSW** to mock Watchfire in component tests — intercept `fetch('/api/watchfire/*')` and return canned DTOs from fixtures.
 - **No visual regression testing in v1.** Add when designs stabilize.
 
 ## Security
@@ -310,7 +310,7 @@ apps/dashboard/
       search/page.tsx
       api/
         auth/[...nextauth]/route.ts
-        iris/[...path]/route.ts    # generic BFF proxy with bearer injection
+        watchfire/[...path]/route.ts    # generic BFF proxy with bearer injection
         events/route.ts            # SSE proxy
     components/
       ui/                          # shadcn-style atoms (Button, Card, Pill, Skeleton)
@@ -319,10 +319,10 @@ apps/dashboard/
       runs/                        # RunRow, RunDetail
       layout/                      # AppShell, BottomNav, OfflineBanner
     lib/
-      iris.ts                      # server-side Watchfire client (bearer-injecting fetch)
+      watchfire.ts                      # server-side Watchfire client (bearer-injecting fetch)
       auth.ts                      # Auth.js config (Entra provider, allowlist)
       schemas.ts                   # zod schemas mirroring Watchfire DTOs
-      sse.ts                       # useIrisEvents() client hook
+      sse.ts                       # useWatchfireEvents() client hook
       queryKeys.ts                 # TanStack Query key factory
     middleware.ts                  # auth guard for all non-/api/auth/* routes
   tests/
@@ -361,7 +361,7 @@ Implementation lands **after** spec 11's amendments are committed. The dashboard
 
 1. Spec 11 amendments PR (this spec's §Spec 11 dependencies → updates in spec 11 itself).
 2. Watchfire implementation PR adds the new endpoints + MCP tools + SSE bus + write paths to `apps/agent/src/api/`.
-3. your-iac-repo PR adds `solutions/iris-dashboard/` (Terraform, secrets template, deploy.sh) + `modules/azure/aad_app_registration`. Run `./deploy.sh terraform` once to provision empty App Service + AAD app.
+3. your-iac-repo PR adds `solutions/watchfire-dashboard/` (Terraform, secrets template, deploy.sh) + `modules/azure/aad_app_registration`. Run `./deploy.sh terraform` once to provision empty App Service + AAD app.
 4. Watchfire-Dashboard repo created on Azure DevOps with the scaffolding + first deploy.
 5. Iterate page by page — overview first, then findings, runs, mutes, search.
 
@@ -373,4 +373,4 @@ Implementation estimate: ~2–3 weeks part-time. The spec 11 expansion is ~1 wee
 - **Cost-trend timezone**: daily buckets are computed on the Watchfire server in UTC. The dashboard renders bucket labels in `Europe/Berlin`. Cosmetic; no bucket boundaries shift.
 - **Run transcript display**: spec 09 says transcripts are JSONL files on disk, not in the DB. Surfacing them in the dashboard would require a new endpoint (`GET /api/runs/:id/transcript`) that streams the file. Out of scope for v1; defer until operator misses it.
 - **Push notifications**: out of scope. Telegram already does push. If the dashboard ever needs PWA push, it's a substantial spec change (VAPID keys, subscription endpoint, server-side push).
-- **Service-principal lifecycle for Azure DevOps deploy**: Terraform creates the AAD app for sign-in; Azure DevOps's deploy SP is a separate principal. Probably created manually in the Azure DevOps project settings during bootstrap. Document the procedure in your-iac-repo's `solutions/iris-dashboard/README.md`.
+- **Service-principal lifecycle for Azure DevOps deploy**: Terraform creates the AAD app for sign-in; Azure DevOps's deploy SP is a separate principal. Probably created manually in the Azure DevOps project settings during bootstrap. Document the procedure in your-iac-repo's `solutions/watchfire-dashboard/README.md`.

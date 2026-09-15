@@ -7,9 +7,9 @@
 #   With no sub IDs, auto-discovers all *enabled* subscriptions in the current
 #   AAD tenant. Pass explicit sub IDs to override.
 #
-#   e.g. azure-sp.sh iris-reader-main                        # all subs in tenant
-#        azure-sp.sh iris-reader-main 11111... 22222...      # only the listed
-#        azure-sp.sh iris-reader-initech                     # all initech subs
+#   e.g. azure-sp.sh watchfire-reader-main                        # all subs in tenant
+#        azure-sp.sh watchfire-reader-main 11111... 22222...      # only the listed
+#        azure-sp.sh watchfire-reader-initech                     # all initech subs
 
 set -euo pipefail
 
@@ -19,7 +19,7 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 if [ $# -lt 1 ]; then
   cat >&2 <<EOF
 Usage: $0 <sp-name> [<sub-id> ...]
-  Convention: <sp-name> ∈ { iris-reader-main, iris-reader-initech }.
+  Convention: <sp-name> ∈ { watchfire-reader-main, watchfire-reader-initech }.
   Switch AAD tenant first with: az login --tenant <aad-tenant-id>
   With no sub IDs, all enabled subs in the current tenant are used.
 EOF
@@ -90,8 +90,8 @@ for s in "${SUBSCRIPTIONS[@]}"; do
   fi
 done
 
-# Derive env-var prefix from the SP name: iris-reader-main -> AZ_SP_MAIN
-SUFFIX="${NAME#iris-reader-}"
+# Derive env-var prefix from the SP name: watchfire-reader-main -> AZ_SP_MAIN
+SUFFIX="${NAME#watchfire-reader-}"
 PREFIX="AZ_SP_$(echo "$SUFFIX" | tr 'a-z-' 'A-Z_')"
 
 cat <<EOF

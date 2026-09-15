@@ -10,7 +10,7 @@ as its build context — npm workspaces keep a single lockfile there, so the ima
 cannot be built from `apps/agent/` alone:
 
 ```bash
-docker build -f apps/agent/Dockerfile --tag iris .
+docker build -f apps/agent/Dockerfile --tag watchfire .
 ```
 
 **Runtime layout.** The image is deliberately flat, and anything deploying it
@@ -27,7 +27,7 @@ depends on that shape:
 Verify after any change to the build:
 
 ```bash
-docker run --rm --entrypoint ls iris -1 /app
+docker run --rm --entrypoint ls watchfire -1 /app
 # bin config dist node_modules package.json
 ```
 
@@ -36,12 +36,12 @@ configuration is mounted at runtime and pointed at by environment variables:
 
 | Variable | Meaning |
 |---|---|
-| `IRIS_TENANTS_PATH` | tenant registry, e.g. `/etc/iris/config/tenants.yaml` |
-| `IRIS_RESOURCES_PATH` | cross-tenant resource graph |
-| `IRIS_DB_PATH` | SQLite memory database |
-| `IRIS_TRANSCRIPT_DIR` | per-run transcripts |
-| `IRIS_NIGHTLY_CRON` | nightly sweep schedule (node-cron expression, `Europe/Berlin`). Default `30 2 * * *` (daily 02:30). Lower cost by widening it, e.g. `30 2 * * 1,3,5` for Mon/Wed/Fri — trades run frequency for detection lag. |
-| `IRIS_CATCHUP_STALE_HOURS` | startup catch-up fires if the last successful nightly is older than this. Default `24`. **Must be raised to cover the longest gap `IRIS_NIGHTLY_CRON` can produce** (e.g. `76` for Mon/Wed/Fri, covering the 72h Fri→Mon gap with margin) — otherwise a container restart on a between-run day fires an unplanned extra sweep and quietly erodes the savings from a sparser cron. |
+| `WATCHFIRE_TENANTS_PATH` | tenant registry, e.g. `/etc/watchfire/config/tenants.yaml` |
+| `WATCHFIRE_RESOURCES_PATH` | cross-tenant resource graph |
+| `WATCHFIRE_DB_PATH` | SQLite memory database |
+| `WATCHFIRE_TRANSCRIPT_DIR` | per-run transcripts |
+| `WATCHFIRE_NIGHTLY_CRON` | nightly sweep schedule (node-cron expression, `Europe/Berlin`). Default `30 2 * * *` (daily 02:30). Lower cost by widening it, e.g. `30 2 * * 1,3,5` for Mon/Wed/Fri — trades run frequency for detection lag. |
+| `WATCHFIRE_CATCHUP_STALE_HOURS` | startup catch-up fires if the last successful nightly is older than this. Default `24`. **Must be raised to cover the longest gap `WATCHFIRE_NIGHTLY_CRON` can produce** (e.g. `76` for Mon/Wed/Fri, covering the 72h Fri→Mon gap with margin) — otherwise a container restart on a between-run day fires an unplanned extra sweep and quietly erodes the savings from a sparser cron. |
 
 Mount the registry read-only; Watchfire never writes to it. The container runs as an
 unprivileged user, so the files must be world-readable (`0644`).
@@ -49,7 +49,7 @@ unprivileged user, so the files must be world-readable (`0644`).
 🚨 **The image ships example configuration only.** `config/tenants.example.yaml` and
 `config/resources.example.yaml` are placeholders — deliberately, so that no operator's
 tenant data is baked into a published image. A container started without a real
-registry mounted, or without `IRIS_TENANTS_PATH` pointing at one, **will not start**:
+registry mounted, or without `WATCHFIRE_TENANTS_PATH` pointing at one, **will not start**:
 it exits naming the file it could not find. That is the intended failure; it is far
 better than silently sweeping four tenants that do not exist.
 
@@ -94,7 +94,7 @@ Azure DevOps project:
    Service connections), granting access to the Watchfire repository.
 2. Edit the existing pipeline → **Settings** → repoint its source to the GitHub
    repository, with the YAML path `apps/dashboard/ci/azure-pipelines.yml`.
-3. Set the pipeline variable `irisApiUrl` to the Watchfire API's public URL.
+3. Set the pipeline variable `watchfireApiUrl` to the Watchfire API's public URL.
 4. Run the pipeline once from `main` and confirm the App Service serves the new
    build.
 

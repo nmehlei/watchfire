@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 export interface SignatureConfig {
   /** HMAC secret. When absent, verification is treated as opt-out. */
   secret?: string | undefined;
-  /** Explicit override — set from IRIS_WEBHOOK_VERIFY=false at startup. */
+  /** Explicit override — set from WATCHFIRE_WEBHOOK_VERIFY=false at startup. */
   skip?: boolean | undefined;
 }
 

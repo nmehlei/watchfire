@@ -14,7 +14,7 @@ apps/agent/config/
   resources.yaml   # only shared/cross-tenant resources, for affects expansion
 ```
 
-Secrets never live in these files — only env var *names* pointing into `.env` (loaded by Docker Compose, which in turn reads from `/etc/iris/secrets` on the host).
+Secrets never live in these files — only env var *names* pointing into `.env` (loaded by Docker Compose, which in turn reads from `/etc/watchfire/secrets` on the host).
 
 ### Field semantics
 
@@ -150,14 +150,14 @@ Standalone client engagement, no cross-tenant data dependencies. Azure resources
 
 | Credential                 | Principal                                | Role / scope                                                                  |
 | -------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------- |
-| `AZ_SP_ACME_*`              | SP `iris-reader-acme` in acme AAD tenant   | `Reader` on the single acme subscription (which also hosts globex + umbrella) |
-| `AZ_SP_INITECH_*`          | SP `iris-reader-initech` in initech AAD  | `Reader` on the initech subscription                                          |
+| `AZ_SP_ACME_*`              | SP `watchfire-reader-acme` in acme AAD tenant   | `Reader` on the single acme subscription (which also hosts globex + umbrella) |
+| `AZ_SP_INITECH_*`          | SP `watchfire-reader-initech` in initech AAD  | `Reader` on the initech subscription                                          |
 | `HCLOUD_TOKEN_*`           | Hetzner API token, per account           | Read-only (Hetzner's token-level setting)                                     |
 | `KUBECONFIG_INITECH`       | Kubeconfig with SA token                 | `view` ClusterRole + `get nodes` (no `get secrets`)                           |
-| SSH keys                   | One key per Hetzner account              | Dedicated user `iris`, `iris-shell` forced-command; no sudo, no TTY           |
+| SSH keys                   | One key per Hetzner account              | Dedicated user `watchfire`, `watchfire-shell` forced-command; no sudo, no TTY           |
 | `OPENOBSERVE_USER` / `OPENOBSERVE_PASSWORD` | Single shared user across all tenants   | Read-only at the org level. Tenant separation is by stream name within `default` org, not by credential |
 
-Each Azure SP env name expands to three concrete vars: `_TENANT_ID`, `_CLIENT_ID`, `_CLIENT_SECRET`. All secrets stored as docker-compose env vars, sourced from `/etc/iris/secrets/*.env` (mode 600, root-owned on the VPS). `.env` files are gitignored.
+Each Azure SP env name expands to three concrete vars: `_TENANT_ID`, `_CLIENT_ID`, `_CLIENT_SECRET`. All secrets stored as docker-compose env vars, sourced from `/etc/watchfire/secrets/*.env` (mode 600, root-owned on the VPS). `.env` files are gitignored.
 
 ## Resource graph (cross-tenant deps)
 
@@ -188,6 +188,6 @@ When the agent reports a finding referencing a resource in this file, the post-p
 1. Add entry to `tenants.yaml`.
 2. Create Azure SP (if new Az tenant) or grant `Reader` on new sub (if existing).
 3. Generate Hetzner / kubeconfig / OO tokens as needed.
-4. Drop secrets into `/etc/iris/secrets/`.
+4. Drop secrets into `/etc/watchfire/secrets/`.
 5. `git pull && docker compose up -d --build` on the VPS.
-6. Run `docker compose run --rm iris nightly --tenant <new>` once manually to verify.
+6. Run `docker compose run --rm watchfire nightly --tenant <new>` once manually to verify.

@@ -25,10 +25,10 @@ export async function GET(req: Request): Promise<Response> {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const upstream = await fetch(`${env.IRIS_API_URL}/api/events`, {
+  const upstream = await fetch(`${env.WATCHFIRE_API_URL}/api/events`, {
     method: "GET",
     headers: {
-      authorization: `Bearer ${env.IRIS_API_TOKEN}`,
+      authorization: `Bearer ${env.WATCHFIRE_API_TOKEN}`,
       accept: "text/event-stream",
       "x-trace-id": trace_id,
     },

@@ -5,7 +5,7 @@
 Defines how Watchfire stays read-only at the tool-invocation layer. Credentials are the primary boundary (see `02-tenants.md` and the Terraform in `infra/terraform/`); this spec owns the two layers sitting in front of credentials:
 
 - the **safety hook**, which inspects every shell command the agent tries to run, and
-- **`iris-shell`**, the forced SSH command on target hosts.
+- **`watchfire-shell`**, the forced SSH command on target hosts.
 
 Transcript retention, secret rotation, and deploy procedures live in `docs/operations.md`; SDK-level process concerns (KV fetch, tmpfs materialization) live in `01-architecture.md`. This spec does not redefine them.
 
@@ -16,7 +16,7 @@ In scope:
 - **Agent misfires.** Haiku-4.5 picks `edit` when it meant `describe`, or appends a flag that flips a read verb into a write verb. The safety hook must catch these cheaply and, where possible, let the agent recover within the same run.
 - **Prompt injection via tool output.** A log line, HTTP body, or Kubernetes event can contain natural-language instructions. The agent must not be able to escape its role through crafted upstream data.
 - **Accidental destructive shell idioms.** `rm -rf`, `curl | sh`, `dd of=/dev/sda`, unintended `sudo`. No legitimate Watchfire tool call ever needs these.
-- **Secret exfiltration via tool output.** The agent must not be able to read `/run/iris/**` (tmpfs-materialized secrets like `kubeconfig`, SSH key) or `/etc/iris/secrets/**` (host-side bootstrap env).
+- **Secret exfiltration via tool output.** The agent must not be able to read `/run/watchfire/**` (tmpfs-materialized secrets like `kubeconfig`, SSH key) or `/etc/watchfire/secrets/**` (host-side bootstrap env).
 
 Out of scope:
 
@@ -30,7 +30,7 @@ Three layers, in order of primacy. Each is independently sufficient for its own 
 
 1. **Reader-scoped credentials** (`02-tenants.md`, Terraform). Azure SP at `Reader`, Hetzner token set read-only, Kubernetes SA bound to `view`, OpenObserve tokens stream-read-scoped. If every other layer fails, mutation attempts fail at the platform boundary.
 2. **Safety hook** (this spec). Pre-tool-use inspection of every shell command before it executes; two-tier response.
-3. **`iris-shell`** (this spec). SSH forced-command on target hosts: even a full-shell `ssh` invocation lands in a restricted script that executes only an allowlist of read-only binaries.
+3. **`watchfire-shell`** (this spec). SSH forced-command on target hosts: even a full-shell `ssh` invocation lands in a restricted script that executes only an allowlist of read-only binaries.
 
 Because layer 1 is strong, layers 2 and 3 can favor **ergonomics under misfire** over maximal strictness. The safety hook leans on soft-blocks (let the agent retry) rather than hard-aborts for most cases. The failure mode we're optimizing against is "agent wasted half a run before getting corrected," not "agent mutated production."
 
@@ -79,7 +79,7 @@ Non-negotiable. These match regardless of adapter context. Patterns are conceptu
 | Privilege escalation            | `sudo`, `su`, `doas`                                                                                                                |
 | Shell execution from data       | `curl \| sh`, `wget \| sh`, `eval`, `bash -c` with quoted arg, `source` of non-allowlisted paths                                    |
 | Block-device / raw-disk writes  | redirects into `/dev/sd*`, `/dev/nvme*`                                                                                             |
-| Secret exfiltration             | any read command (`cat`, `less`, `head`, `tail`, `strings`, `xxd`, `base64`, `cp`, `tar`) targeting `/run/iris/**` or `/etc/iris/secrets/**` |
+| Secret exfiltration             | any read command (`cat`, `less`, `head`, `tail`, `strings`, `xxd`, `base64`, `cp`, `tar`) targeting `/run/watchfire/**` or `/etc/watchfire/secrets/**` |
 | Background / async              | trailing `&`, `nohup`, `disown`, heredocs, `exec` redirection                                                                       |
 | Perm relaxation                 | `chmod 777`, `chmod a+rwx`, `chown`                                                                                                 |
 
@@ -94,7 +94,7 @@ For each adapter, a verb allowlist. Commands matching the adapter but outside th
 | `az-as`                                                   | `show`, `list`, `get`, `query`, `monitor metrics`, `monitor activity-log`, `monitor log-analytics`        |
 | `hcloud-as`                                               | any `list`, any `describe`, `ssh-key list`, `pricing list`                                                |
 | `kubectl-as`                                              | `get`, `describe`, `logs`, `top`, `explain`, `api-resources`, `api-versions`, `auth can-i`, `config view` |
-| `ssh-as`                                                  | any invocation (inner allowlist enforced by `iris-shell`; see Layer 3)                                    |
+| `ssh-as`                                                  | any invocation (inner allowlist enforced by `watchfire-shell`; see Layer 3)                                    |
 | `obs-search`, `obs-metrics`, `obs-streams`, `obs-alerts`  | any invocation (these adapters are read-only by construction)                                             |
 | `check-ssl`, `check-http`, `check-ado`                    | any invocation (read-only REST/probe by construction)                                                    |
 | Generic utilities                                         | `cat`, `grep`, `egrep`, `fgrep`, `head`, `tail`, `wc`, `sort`, `uniq`, `cut`, `awk`, `sed` (no `-i`), `tr`, `jq`, `date`, `echo`, `printf` |
@@ -123,19 +123,19 @@ Hints are an in-memory map in `apps/agent/src/agent/safety.ts`. Adding a hint is
 - **Removing a hard-block pattern**: requires explicit operator sign-off in the PR description. Never silently loosened.
 - **Hints**: code-only change.
 
-## Layer 3: `iris-shell`
+## Layer 3: `watchfire-shell`
 
-SSH to target hosts goes through `apps/agent/bin/ssh-as`, which connects as the `iris` user on each target. That user's `~/.ssh/authorized_keys` pins a forced command:
+SSH to target hosts goes through `apps/agent/bin/ssh-as`, which connects as the `watchfire` user on each target. That user's `~/.ssh/authorized_keys` pins a forced command:
 
 ```
-command="/usr/local/bin/iris-shell",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-user-rc <iris-pubkey>
+command="/usr/local/bin/watchfire-shell",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-user-rc <watchfire-pubkey>
 ```
 
-Any SSH connection, regardless of `$SSH_ORIGINAL_COMMAND`, lands in `/usr/local/bin/iris-shell`.
+Any SSH connection, regardless of `$SSH_ORIGINAL_COMMAND`, lands in `/usr/local/bin/watchfire-shell`.
 
 ### Allowlist
 
-`iris-shell` is a vetted bash script (~50 lines) that parses `$SSH_ORIGINAL_COMMAND` against an allowlist and execs the matched binary. The v1 allowlist (lifted from `specs/03-systems.md`; exact match, not a starting point):
+`watchfire-shell` is a vetted bash script (~50 lines) that parses `$SSH_ORIGINAL_COMMAND` against an allowlist and execs the matched binary. The v1 allowlist (lifted from `specs/03-systems.md`; exact match, not a starting point):
 
 | Binary       | Permitted forms                                                                                 |
 | ------------ | ----------------------------------------------------------------------------------------------- |
@@ -149,30 +149,30 @@ Any SSH connection, regardless of `$SSH_ORIGINAL_COMMAND`, lands in `/usr/local/
 | `systemctl`  | `systemctl status <unit>` only                                                                  |
 | `cat`        | `cat <whitelisted-path>`                                                                        |
 
-**Whitelisted log/config paths** are per-host and live in `/etc/iris/paths.allow` on each target, one path per line. Typical entries: `/var/log/syslog`, `/var/log/mssql/*.log`, `/etc/nginx/nginx.conf`. Any path not in the file → refused. Globs in `paths.allow` are expanded by `iris-shell`, not by the shell at call time.
+**Whitelisted log/config paths** are per-host and live in `/etc/watchfire/paths.allow` on each target, one path per line. Typical entries: `/var/log/syslog`, `/var/log/mssql/*.log`, `/etc/nginx/nginx.conf`. Any path not in the file → refused. Globs in `paths.allow` are expanded by `watchfire-shell`, not by the shell at call time.
 
-Anything outside the allowlist causes `iris-shell` to exit 2 with `iris-shell: command not permitted: <first-token>` on stderr. The Watchfire host surfaces this to the agent as any other failed command.
+Anything outside the allowlist causes `watchfire-shell` to exit 2 with `watchfire-shell: command not permitted: <first-token>` on stderr. The Watchfire host surfaces this to the agent as any other failed command.
 
 ### Properties
 
 - **No TTY, no port forwarding, no agent forwarding, no X11, no user rc.** Forced in `authorized_keys`.
-- **No shell expansion of the original command.** `iris-shell` parses `$SSH_ORIGINAL_COMMAND` with `read -r -a` into an array; no `eval`, no `sh -c`.
+- **No shell expansion of the original command.** `watchfire-shell` parses `$SSH_ORIGINAL_COMMAND` with `read -r -a` into an array; no `eval`, no `sh -c`.
 - **No pipelines on the target.** Pipelines on the Watchfire side (via `ssh-as`) are fine — they happen after data comes back. The target executes one allowlisted binary per connection.
 - **Exit codes are forwarded** so the agent can distinguish "command failed" from "command blocked."
 
 ### Extending the allowlist
 
-Same rule as safety-hook patterns: **spec change + script edit in the same PR**. The script lives at `infra/ssh/iris-shell.sh` and deploys to each target via the ops deploy path defined in `docs/operations.md`. Every extension is reviewable in `git log infra/ssh/iris-shell.sh`.
+Same rule as safety-hook patterns: **spec change + script edit in the same PR**. The script lives at `infra/ssh/watchfire-shell.sh` and deploys to each target via the ops deploy path defined in `docs/operations.md`. Every extension is reviewable in `git log infra/ssh/watchfire-shell.sh`.
 
 ### Initial provisioning
 
 Per target, one-time:
 
-1. Create `iris` user: `useradd -m -s /bin/bash iris`.
-2. Install `iris-shell.sh` to `/usr/local/bin/iris-shell`, `chmod 0755`, `chown root:root`.
-3. Populate `/etc/iris/paths.allow` with per-host log/config entries.
+1. Create `watchfire` user: `useradd -m -s /bin/bash watchfire`.
+2. Install `watchfire-shell.sh` to `/usr/local/bin/watchfire-shell`, `chmod 0755`, `chown root:root`.
+3. Populate `/etc/watchfire/paths.allow` with per-host log/config entries.
 4. Drop the `authorized_keys` entry with the forced command + `no-*` options.
-5. Verify: `ssh iris@host "df -h"` returns output; `ssh iris@host "rm -rf /"` returns `iris-shell: command not permitted: rm` on stderr and exit 2.
+5. Verify: `ssh watchfire@host "df -h"` returns output; `ssh watchfire@host "rm -rf /"` returns `watchfire-shell: command not permitted: rm` on stderr and exit 2.
 
 Runbook in `docs/operations.md`.
 
@@ -198,7 +198,7 @@ For v1, the audit trail is the transcript file — no new schema.
 - Soft-blocks (transcript-side):
 
   ```
-  grep -l "Command blocked by safety hook" /var/lib/iris/transcripts/*.jsonl
+  grep -l "Command blocked by safety hook" /var/lib/watchfire/transcripts/*.jsonl
   ```
 
   Per-run counts via `jq` over the transcript.
@@ -231,15 +231,15 @@ apps/agent/src/agent/
   runner.ts              # SDK wrapper; installs safety as the pre-tool-use hook
 
 infra/ssh/
-  iris-shell.sh          # the forced command; deployed to every target
-  iris-shell.test.sh     # bats tests: allowed commands pass, denied ones exit 2
+  watchfire-shell.sh          # the forced command; deployed to every target
+  watchfire-shell.test.sh     # bats tests: allowed commands pass, denied ones exit 2
 ```
 
-Tests are mandatory for any PR that touches safety. Every hard-block pattern and every adapter allowlist entry pairs with at least one positive and one negative test. `iris-shell.sh` is tested with [bats](https://github.com/bats-core/bats-core) against each entry in the allowlist.
+Tests are mandatory for any PR that touches safety. Every hard-block pattern and every adapter allowlist entry pairs with at least one positive and one negative test. `watchfire-shell.sh` is tested with [bats](https://github.com/bats-core/bats-core) against each entry in the allowlist.
 
 ## Open questions
 
 - **Full-allowlist posture.** The current design is denylist + per-adapter allowlist + small generic-utility allowlist. A stricter design would allowlist the entire command surface with no generic escape. More secure; every `grep` or `jq` the agent wants becomes a safety PR. Rejected for v1 because the RBAC backstop carries most of the risk; revisit if transcripts show the generic allowlist being abused.
 - **Soft-block loop escalation.** If the agent hits the same soft-block three times in one run, should it escalate to a hard-block? Would prevent pathological token burn from a stuck loop. Defer until first observed occurrence.
 - **Per-tenant safety tightening.** All tenants share the same allowlist today. If a client tenant (umbrella) ever needs stricter rules than acme, the hook needs tenant context. Out of scope for v1.
-- **`iris-shell` target-side logging.** Currently silent on success, one stderr line on failure. Adding an append-only `/var/log/iris-shell.log` on targets would help forensic review but introduces disk-management on every box. Tentative: no for v1; add if an incident demands it.
+- **`watchfire-shell` target-side logging.** Currently silent on success, one stderr line on failure. Adding an append-only `/var/log/watchfire-shell.log` on targets would help forensic review but introduces disk-management on every box. Tentative: no for v1; add if an incident demands it.

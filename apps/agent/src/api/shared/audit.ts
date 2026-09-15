@@ -34,7 +34,7 @@ export function emitApiAudit(log: ApiAuditLogger, event: ApiAuditEvent): void {
   // emitter directly), the field is omitted. Lets dashboard ↔ Watchfire logs
   // correlate without threading the id through every handler.
   const trace_id = currentTraceId();
-  log('iris.api.request', {
+  log('watchfire.api.request', {
     surface: event.surface,
     operation: event.operation,
     args: event.args,
