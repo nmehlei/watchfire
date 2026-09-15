@@ -155,7 +155,7 @@ Compose shape (rendered by Ansible from a Jinja2 template in your-iac-repo):
 ```yaml
 services:
   iris:
-    image: ghcr.io/your-org/iris:{{ iris_image_tag }}
+    image: ghcr.io/your-org/watchfire:{{ iris_image_tag }}
     restart: unless-stopped
     volumes:
       - iris-data:/var/lib/iris                                  # SQLite + transcripts
@@ -192,7 +192,7 @@ No `cloudflared` sidecar. No Cloudflare account.
 
 **Image flow:**
 
-1. Push / merge to Watchfire `main` → GitHub Actions runs `npm ci && lint && typecheck && test && docker build` → pushes `ghcr.io/your-org/iris:sha-<git-sha>` + `:latest`. The image job `needs: test`, so nothing reaches ghcr unless lint, typecheck, and the full suite pass.
+1. Push / merge to Watchfire `main` → GitHub Actions runs `npm ci && lint && typecheck && test && docker build` → pushes `ghcr.io/your-org/watchfire:sha-<git-sha>` + `:latest`. The image job `needs: test`, so nothing reaches ghcr unless lint, typecheck, and the full suite pass.
 2. Tag a release (`v0.1.0`) in Watchfire → CI additionally pushes `:0.1.0`.
 3. **Code-only changes deploy themselves.** A systemd timer on ops-host (`iris-autoupdate.timer`) polls ghcr, and when the tag named by `iris_image` resolves to a new digest it runs `docker compose pull && up -d` and health-checks the result. Merge to `main` → live within one poll interval.
 4. **Config / secret changes stay manual.** The operator runs `./deploy.sh ansible`, which re-renders the env file from ansible-vault and restarts. Only this path can change secrets.
@@ -232,8 +232,8 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/iris:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/iris:latest
+            ghcr.io/${{ github.repository_owner }}/watchfire:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/watchfire:latest
 ```
 
 Operator deploy loop — needed only for config, secret, or compose changes; code ships itself:
@@ -333,7 +333,7 @@ Prerequisites on the operator laptop: `az login` (TC sub), `terraform`, `ansible
 Steps:
 
 1. Create the Watchfire repo on GitHub (`your-org/Watchfire`, private) and push.
-2. GitHub Actions runs → builds and pushes `ghcr.io/your-org/iris:latest` automatically.
+2. GitHub Actions runs → builds and pushes `ghcr.io/your-org/watchfire:latest` automatically.
 3. In `your-iac-repo`:
 
    ```bash
