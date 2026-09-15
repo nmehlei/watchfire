@@ -101,9 +101,34 @@ Azure DevOps project:
 🚨 **Only then archive the old repository.** Archiving before a GitHub-sourced run
 has deployed successfully leaves the dashboard with no working deploy path.
 
-## What is not published
+## The published image
 
-The project's container images are not published. Build the agent image yourself
-from source: the image bundles the Claude Agent SDK and the Claude Code binary,
-which are proprietary and governed by Anthropic's own terms rather than this
-project's licence.
+The agent image is published publicly on every push to `main`:
+
+```bash
+docker pull ghcr.io/nmehlei/watchfire:latest
+```
+
+Tags are `latest`, `main`, and `sha-<commit>` for an immutable pin. Building from
+source stays fully supported and is the right choice if you want to audit what you
+run — the `docker build` line above produces the same image.
+
+### Notice: the image contains Anthropic components
+
+**The image bundles the Claude Agent SDK and the Claude Code executable
+(`@anthropic-ai/claude-agent-sdk` and its platform packages, ~206 MB).** These are
+proprietary, are **not** covered by this project's AGPL licence, and remain governed
+by [Anthropic's own terms](https://code.claude.com/docs/en/legal-and-compliance).
+This notice is the condition attached to the Section 7 additional permission in
+[`LICENSE`](../LICENSE); if you redistribute the image or offer it as a network
+service, you must pass this notice on.
+
+Anthropic's terms permit shipping Claude Code preinstalled in a product subject to
+conditions. The two that constrain how you deploy Watchfire:
+
+- **The binary must not be modified.** Watchfire installs it unmodified from npm and
+  never patches it. Don't strip or alter it in a derived image.
+- **You must not resell or intermediate Claude usage.** Every operator supplies their
+  own `ANTHROPIC_API_KEY`, and that usage is billed to them under their own agreement
+  with Anthropic. Watchfire holds no key on anyone's behalf — do not run it as a
+  shared service that bills Claude usage through your account.

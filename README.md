@@ -24,7 +24,7 @@ through the night and tells you what broke.**
 Watchfire sweeps every system you point it at once a night, investigates what looks
 wrong, and sends you a digest. When an alert fires, it triages in real time and
 pages you only if it is worth waking up for. It remembers what it has seen, so the
-second night is quieter than the first. It runs as one small container.
+second night is quieter than the first. It runs as a single container.
 
 ## It never writes
 
@@ -68,8 +68,8 @@ You need Node 24, an [Anthropic API key](docs/integrations/anthropic.md), and a
 it and will not start without one.
 
 ```bash
-git clone https://github.com/your-org/watchfire.git
-cd iris
+git clone https://github.com/nmehlei/watchfire.git
+cd watchfire
 npm ci
 
 # Your tenant registry, starting from the examples
@@ -120,7 +120,9 @@ each system, and what to expect from the first run.
 offer its source to your users. The licence file also carries a narrow Section 7
 permission covering the proprietary Claude Agent SDK that Watchfire depends on.
 
-Container images are not published — build from source. See
-[deployment](docs/deployment.md#what-is-not-published) for why.
+The container image at `ghcr.io/nmehlei/watchfire` bundles the Claude Agent SDK and the
+Claude Code executable, which are proprietary and stay under
+[Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance) — see
+[deployment](docs/deployment.md#notice-the-image-contains-anthropic-components).
 
-> Watchfire is not affiliated with InterSystems Watchfire®.
+> Watchfire is not affiliated with InterSystems IRIS®.
