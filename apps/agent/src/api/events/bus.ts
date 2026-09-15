@@ -3,7 +3,7 @@ import type { FindingState } from '../../memory/types.js';
 
 export const DEBOUNCE_MS = 5_000;
 
-export interface IrisEventPayload {
+export interface WatchfireEventPayload {
   'nightly.completed': { runId: number; status: string };
   'watch.completed': { runId: number; verdict: string | null; pageSent: boolean };
   'mute.created': { fingerprint: string };
@@ -11,7 +11,7 @@ export interface IrisEventPayload {
   'finding.upserted': { fingerprint: string; state: FindingState };
 }
 
-export type IrisEventName = keyof IrisEventPayload;
+export type WatchfireEventName = keyof WatchfireEventPayload;
 
 /**
  * Singleton-friendly event emitter for spec 11 v2 SSE. Process-local;
@@ -29,17 +29,17 @@ export class EventBus {
     this.emitter.setMaxListeners(50);
   }
 
-  on<E extends IrisEventName>(event: E, listener: (payload: IrisEventPayload[E]) => void): void {
+  on<E extends WatchfireEventName>(event: E, listener: (payload: WatchfireEventPayload[E]) => void): void {
     this.emitter.on(event, listener);
   }
 
-  off<E extends IrisEventName>(event: E, listener: (payload: IrisEventPayload[E]) => void): void {
+  off<E extends WatchfireEventName>(event: E, listener: (payload: WatchfireEventPayload[E]) => void): void {
     this.emitter.off(event, listener);
   }
 
-  emit<E extends Exclude<IrisEventName, 'finding.upserted'>>(
+  emit<E extends Exclude<WatchfireEventName, 'finding.upserted'>>(
     event: E,
-    payload: IrisEventPayload[E],
+    payload: WatchfireEventPayload[E],
   ): void {
     this.emitter.emit(event, payload);
   }

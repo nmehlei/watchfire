@@ -7,7 +7,7 @@ describe('parseCommand', () => {
   });
 
   it('strips @bot suffix from the command word', () => {
-    expect(parseCommand('/help@iris_bot')).toEqual({ kind: 'help' });
+    expect(parseCommand('/help@watchfire_bot')).toEqual({ kind: 'help' });
   });
 
   it('treats /start as help', () => {

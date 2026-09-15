@@ -22,7 +22,7 @@ cp apps/agent/config/tenants.example.yaml   apps/agent/config/tenants.yaml
 cp apps/agent/config/resources.example.yaml apps/agent/config/resources.yaml
 ```
 
-Point Watchfire at them with `IRIS_TENANTS_PATH` and `IRIS_RESOURCES_PATH`. If either file
+Point Watchfire at them with `WATCHFIRE_TENANTS_PATH` and `WATCHFIRE_RESOURCES_PATH`. If either file
 is missing, Watchfire refuses to start and names the example to copy.
 
 ### Tenants
@@ -108,23 +108,23 @@ The defaults suit a container. Outside one, set all three.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `IRIS_TENANTS_PATH` | `/etc/iris/tenants.yaml` | Tenant registry |
-| `IRIS_RESOURCES_PATH` | `/etc/iris/resources.yaml` | Shared-resource graph |
-| `IRIS_DB_PATH` | `/var/lib/iris/iris.db` | SQLite memory — **its directory must already exist** |
-| `IRIS_TRANSCRIPT_DIR` | `transcripts/` beside the database | Per-run transcripts |
-| `IRIS_HTTP_PORT` | `8080` | Webhooks, health, and the API |
+| `WATCHFIRE_TENANTS_PATH` | `/etc/watchfire/tenants.yaml` | Tenant registry |
+| `WATCHFIRE_RESOURCES_PATH` | `/etc/watchfire/resources.yaml` | Shared-resource graph |
+| `WATCHFIRE_DB_PATH` | `/var/lib/watchfire/watchfire.db` | SQLite memory — **its directory must already exist** |
+| `WATCHFIRE_TRANSCRIPT_DIR` | `transcripts/` beside the database | Per-run transcripts |
+| `WATCHFIRE_HTTP_PORT` | `8080` | Webhooks, health, and the API |
 
 ### Optional features
 
 | Variable | Enables |
 |---|---|
-| `IRIS_API_TOKEN` | The REST API and MCP endpoint. Unset, both are disabled. |
+| `WATCHFIRE_API_TOKEN` | The REST API and MCP endpoint. Unset, both are disabled. |
 | `TELEGRAM_WEBHOOK_URL` + `TELEGRAM_WEBHOOK_SECRET` | Receiving bot commands. Without both, Watchfire still sends messages but never hears commands. |
 | `TELEGRAM_ALLOWED_CHAT_IDS` | Which chats may send commands. Defaults to `TELEGRAM_CHAT_ID`. |
-| `IRIS_NIGHTLY_CRON` | The sweep schedule, as a cron expression. Default `30 2 * * *`. |
-| `IRIS_CATCHUP_STALE_HOURS` | How stale the last nightly must be for a startup catch-up. Default `24`. |
+| `WATCHFIRE_NIGHTLY_CRON` | The sweep schedule, as a cron expression. Default `30 2 * * *`. |
+| `WATCHFIRE_CATCHUP_STALE_HOURS` | How stale the last nightly must be for a startup catch-up. Default `24`. |
 | `OPENOBSERVE_WEBHOOK_SECRET` | Verifying incoming alert webhooks. **Set this** — see below. |
-| `IRIS_WEBHOOK_VERIFY=false` | Forces verification off even with a secret. For debugging only. |
+| `WATCHFIRE_WEBHOOK_VERIFY=false` | Forces verification off even with a secret. For debugging only. |
 
 ### System credentials
 
@@ -142,7 +142,7 @@ With the configuration and variables above in place:
 
 ```bash
 mkdir -p apps/agent/data
-export IRIS_TENANTS_PATH=config/tenants.yaml IRIS_RESOURCES_PATH=config/resources.yaml IRIS_DB_PATH=data/iris.db
+export WATCHFIRE_TENANTS_PATH=config/tenants.yaml WATCHFIRE_RESOURCES_PATH=config/resources.yaml WATCHFIRE_DB_PATH=data/watchfire.db
 npm run dev
 ```
 
@@ -167,19 +167,19 @@ cd apps/agent
 ```
 
 From `apps/agent/`, the commands find `config/tenants.yaml` on their own; elsewhere,
-they read `IRIS_TENANTS_PATH` or take `--tenants-path`.
+they read `WATCHFIRE_TENANTS_PATH` or take `--tenants-path`.
 
 ## The nightly sweep
 
 By default, every night at **02:30 Europe/Berlin**, the agent works through each
 tenant with the adapters available to it, records findings, and sends a digest.
-`IRIS_NIGHTLY_CRON` changes the cadence — a sparser schedule costs less and finds
+`WATCHFIRE_NIGHTLY_CRON` changes the cadence — a sparser schedule costs less and finds
 problems later. The timezone is fixed at `Europe/Berlin`. It has a budget of
 **40 turns**; if it runs out, the run is marked `truncated` and the digest says so.
 
 After the digest, Watchfire resolves findings it no longer sees and prunes old data. If the
 process was down at the scheduled time, it runs a catch-up sweep on startup once the
-last completed nightly is older than `IRIS_CATCHUP_STALE_HOURS` (default 24).
+last completed nightly is older than `WATCHFIRE_CATCHUP_STALE_HOURS` (default 24).
 
 ⚠️ **These two settings are coupled.** If you widen the cron, raise the catch-up
 window to cover the longest gap it can produce — otherwise a restart on a between-run
@@ -190,7 +190,7 @@ day triggers an unplanned sweep and spends the money the sparser schedule saved.
 Alerts become triage runs. Point your OpenObserve alert at:
 
 ```
-POST https://<your-iris-host>/webhook/openobserve
+POST https://<your-watchfire-host>/webhook/openobserve
 ```
 
 Each alert is queued and investigated with a budget of **8 turns**. The agent then
@@ -220,10 +220,10 @@ The full surface is in [`specs/10-telegram-control.md`](../specs/10-telegram-con
 
 ## The API and MCP
 
-Set `IRIS_API_TOKEN` to a long random value. Every request then needs:
+Set `WATCHFIRE_API_TOKEN` to a long random value. Every request then needs:
 
 ```
-Authorization: Bearer <IRIS_API_TOKEN>
+Authorization: Bearer <WATCHFIRE_API_TOKEN>
 ```
 
 The REST routes are listed in [`operations.md`](operations.md#the-api). The same
@@ -231,8 +231,8 @@ surface is available as MCP tools over Streamable HTTP, so a Claude session can 
 Watchfire directly:
 
 ```bash
-claude mcp add --transport http iris https://<your-iris-host>/mcp \
-  --header "Authorization: Bearer <IRIS_API_TOKEN>"
+claude mcp add --transport http watchfire https://<your-watchfire-host>/mcp \
+  --header "Authorization: Bearer <WATCHFIRE_API_TOKEN>"
 ```
 
 Then ask things like "what's still open on acme?" or "mute the disk finding for a
@@ -245,7 +245,7 @@ reaches the browser. Sign-in uses Microsoft Entra ID.
 
 ```bash
 cp apps/dashboard/.env.example apps/dashboard/.env.local
-# fill in IRIS_API_URL, IRIS_API_TOKEN, AUTH_SECRET and the three Entra ID values
+# fill in WATCHFIRE_API_URL, WATCHFIRE_API_TOKEN, AUTH_SECRET and the three Entra ID values
 npm run dev -w @watchfire/dashboard
 ```
 
@@ -263,8 +263,8 @@ The design, including why it is a single-operator app, is in
 |---|---|
 | `missing required env var: NAME` at startup | One of the three required variables is unset |
 | `Config file not found: …` at startup | The registry path is wrong, or you have not copied the example |
-| `unable to open database file` | `IRIS_DB_PATH`'s directory does not exist — create it |
+| `unable to open database file` | `WATCHFIRE_DB_PATH`'s directory does not exist — create it |
 | The bot sends messages but ignores commands | `TELEGRAM_WEBHOOK_URL` or `TELEGRAM_WEBHOOK_SECRET` is unset, or the chat is not allowed |
-| `/api/…` returns `404` | `IRIS_API_TOKEN` is unset, so the API is disabled |
+| `/api/…` returns `404` | `WATCHFIRE_API_TOKEN` is unset, so the API is disabled |
 | An adapter reports an authentication error | Run it by hand (above) to isolate the credential |
 | A digest arrives but a tenant is missing | See [`operations.md`](operations.md#no-nightly-digest) |

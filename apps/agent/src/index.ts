@@ -24,7 +24,7 @@ import { runWatch } from './watch/triage.js';
 
 // Defaults match the original behavior: nightly at 02:30, catch-up after 24h
 // of silence. Deployments that want a cheaper cadence (fewer runs/week) can
-// override both via env — see IRIS_NIGHTLY_CRON / IRIS_CATCHUP_STALE_HOURS in
+// override both via env — see WATCHFIRE_NIGHTLY_CRON / WATCHFIRE_CATCHUP_STALE_HOURS in
 // docs/deployment.md. If you widen the cron gap, widen the catch-up threshold
 // to at least match it: otherwise a container restart on a between-run day
 // fires an unplanned catch-up sweep and quietly erodes the savings.
@@ -100,12 +100,12 @@ function loadEnv(): EnvConfig {
       .filter((n) => Number.isFinite(n) && Number.isInteger(n)),
   );
 
-  const dbPath = process.env['IRIS_DB_PATH'] ?? '/var/lib/iris/iris.db';
+  const dbPath = process.env['WATCHFIRE_DB_PATH'] ?? '/var/lib/watchfire/watchfire.db';
   // Default transcripts next to the DB so container volume mounting covers both.
   const transcriptDir =
-    process.env['IRIS_TRANSCRIPT_DIR'] ?? dirname(dbPath) + '/transcripts';
+    process.env['WATCHFIRE_TRANSCRIPT_DIR'] ?? dirname(dbPath) + '/transcripts';
 
-  const catchupStaleHoursEnv = Number(process.env['IRIS_CATCHUP_STALE_HOURS']);
+  const catchupStaleHoursEnv = Number(process.env['WATCHFIRE_CATCHUP_STALE_HOURS']);
   const catchupStaleHours = Number.isFinite(catchupStaleHoursEnv)
     ? catchupStaleHoursEnv
     : DEFAULT_CATCHUP_STALE_HOURS;
@@ -118,14 +118,14 @@ function loadEnv(): EnvConfig {
     telegramWebhookSecret: process.env['TELEGRAM_WEBHOOK_SECRET'],
     telegramWebhookUrl: process.env['TELEGRAM_WEBHOOK_URL'],
     dbPath,
-    tenantsPath: process.env['IRIS_TENANTS_PATH'] ?? '/etc/iris/tenants.yaml',
-    resourcesPath: process.env['IRIS_RESOURCES_PATH'] ?? '/etc/iris/resources.yaml',
+    tenantsPath: process.env['WATCHFIRE_TENANTS_PATH'] ?? '/etc/watchfire/tenants.yaml',
+    resourcesPath: process.env['WATCHFIRE_RESOURCES_PATH'] ?? '/etc/watchfire/resources.yaml',
     transcriptDir,
-    httpPort: Number(process.env['IRIS_HTTP_PORT'] ?? HTTP_PORT),
+    httpPort: Number(process.env['WATCHFIRE_HTTP_PORT'] ?? HTTP_PORT),
     signatureSecret: process.env['OPENOBSERVE_WEBHOOK_SECRET'],
-    skipVerify: process.env['IRIS_WEBHOOK_VERIFY'] === 'false',
-    apiToken: process.env['IRIS_API_TOKEN'],
-    nightlyCron: process.env['IRIS_NIGHTLY_CRON'] ?? DEFAULT_NIGHTLY_CRON,
+    skipVerify: process.env['WATCHFIRE_WEBHOOK_VERIFY'] === 'false',
+    apiToken: process.env['WATCHFIRE_API_TOKEN'],
+    nightlyCron: process.env['WATCHFIRE_NIGHTLY_CRON'] ?? DEFAULT_NIGHTLY_CRON,
     catchupStaleHours,
   };
 }
@@ -147,7 +147,7 @@ function log(msg: string, fields: Record<string, unknown> = {}): void {
 async function main(): Promise<void> {
   const env = loadEnv();
 
-  log('iris starting', {
+  log('watchfire starting', {
     dbPath: env.dbPath,
     tenantsPath: env.tenantsPath,
     resourcesPath: env.resourcesPath,
@@ -183,7 +183,7 @@ async function main(): Promise<void> {
     });
   }
 
-  // Cron: default daily at 02:30 Europe/Berlin, overridable via IRIS_NIGHTLY_CRON.
+  // Cron: default daily at 02:30 Europe/Berlin, overridable via WATCHFIRE_NIGHTLY_CRON.
   if (!cronValidate(env.nightlyCron)) {
     throw new Error(`invalid cron expression: ${env.nightlyCron}`);
   }
@@ -273,7 +273,7 @@ async function main(): Promise<void> {
   log('http server listening', { port: env.httpPort });
 
   if (!env.apiToken) {
-    log('api surfaces disabled', { reason: 'IRIS_API_TOKEN unset' });
+    log('api surfaces disabled', { reason: 'WATCHFIRE_API_TOKEN unset' });
   } else {
     log('api surfaces enabled', { paths: ['/api/findings', '/api/findings/:id', '/mcp'] });
   }

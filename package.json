@@ -19,7 +19,7 @@
     "test": "npm run test --workspaces --if-present",
     "format": "npm run format --workspaces --if-present",
     "format:check": "npm run format:check --workspaces --if-present",
-    "test:container": "docker build -f apps/agent/Dockerfile --target test --tag iris-test ."
+    "test:container": "docker build -f apps/agent/Dockerfile --target test --tag watchfire-test ."
   },
   "overrides": {
     "fast-uri": "3.1.5"

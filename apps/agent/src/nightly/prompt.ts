@@ -193,7 +193,7 @@ function renderToolInventory(
   if (has('kubectl-as')) {
     lines.push('  kubectl-as — Kubernetes; get/describe/logs/top/explain/api-resources/api-versions/auth can-i/config view.\n');
   }
-  if (has('ssh-as')) lines.push('  ssh-as — SSH to a tenant host; forced to /usr/local/bin/iris-shell allowlist on the target.\n');
+  if (has('ssh-as')) lines.push('  ssh-as — SSH to a tenant host; forced to /usr/local/bin/watchfire-shell allowlist on the target.\n');
 
   const missing = ALL_ADAPTERS.filter((a) => !available.includes(a));
   if (missing.length > 0) {

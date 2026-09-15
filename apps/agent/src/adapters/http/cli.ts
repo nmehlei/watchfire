@@ -54,7 +54,7 @@ function printHelp(): void {
   process.stdout.write(
     [
       'Usage: check-http --tenant <id> [--endpoint <name>] [--timeout <ms>] [--tenants-path <path>]',
-      '  --tenants-path <path>  tenant registry (default: $IRIS_TENANTS_PATH, else config/tenants.yaml)',
+      '  --tenants-path <path>  tenant registry (default: $WATCHFIRE_TENANTS_PATH, else config/tenants.yaml)',
       '',
       'Probes every http_health.endpoints entry for the tenant (or just --endpoint if given).',
       'Reports: status code, response time, body size.',

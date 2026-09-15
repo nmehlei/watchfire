@@ -42,7 +42,7 @@ describe('probeHttp — with injected fetch', () => {
 });
 
 // Optional network integration — skipped if offline.
-const runNetworkTests = !process.env['IRIS_SKIP_NETWORK_TESTS'];
+const runNetworkTests = !process.env['WATCHFIRE_SKIP_NETWORK_TESTS'];
 
 describe.skipIf(!runNetworkTests)('probeHttp — integration', () => {
   it('hits example.com and gets HTTP 200', async () => {

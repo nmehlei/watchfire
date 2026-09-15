@@ -9,7 +9,7 @@ import type { AdapterName } from '../nightly/prompt.js';
 
 export interface AdapterDescriptor {
   name: AdapterName;
-  /** Whether this adapter reports `___IRIS_OBS:` trailers (spec 03). */
+  /** Whether this adapter reports `___WATCHFIRE_OBS:` trailers (spec 03). */
   emitsObservations: boolean;
 }
 

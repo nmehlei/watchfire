@@ -13,8 +13,8 @@ export const EMIT_FINDING_TOOL_NAME = 'emit_finding';
  * Build the `emit_finding` SDK tool for a specific run. Each run gets its own
  * closure so the tool's handler can upsert into memory tagged with the run id.
  *
- * Registered via createSdkMcpServer({name:'iris', tools:[...]}) and visible
- * to the model as `mcp__iris__emit_finding`.
+ * Registered via createSdkMcpServer({name:'watchfire', tools:[...]}) and visible
+ * to the model as `mcp__watchfire__emit_finding`.
  */
 export function createEmitFindingTool(db: Db, runId: number) {
   return tool(

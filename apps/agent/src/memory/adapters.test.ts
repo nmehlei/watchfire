@@ -14,11 +14,11 @@ describe('getAdapterHealth', () => {
       metric: 'days_until_expiry', value: 30, runId,
     });
     appendObservation(db, {
-      tenant: 'acme', source: 'check-http', subject: 'iris.example.com',
+      tenant: 'acme', source: 'check-http', subject: 'watchfire.example.com',
       metric: 'response_ms', value: 80, runId,
     });
     appendObservation(db, {
-      tenant: 'acme', source: 'check-http', subject: 'iris.example.com',
+      tenant: 'acme', source: 'check-http', subject: 'watchfire.example.com',
       metric: 'status_code', value: 200, runId,
     });
 

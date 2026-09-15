@@ -19,7 +19,7 @@ const ALLOWED_PREFIXES = [
 ];
 
 /**
- * Generic BFF proxy: forwards /api/watchfire/<path...> to <IRIS_API_URL>/api/<path...>
+ * Generic BFF proxy: forwards /api/watchfire/<path...> to <WATCHFIRE_API_URL>/api/<path...>
  * with the bearer attached server-side. The client never sees the token.
  *
  * Every request gets a trace_id forwarded to Watchfire as `x-trace-id`. Both
@@ -47,7 +47,7 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   }
 
   const target = new URL(req.url);
-  const upstream = new URL(`${env.IRIS_API_URL}/api/${path.join("/")}`);
+  const upstream = new URL(`${env.WATCHFIRE_API_URL}/api/${path.join("/")}`);
   upstream.search = target.search;
 
   const body = req.method === "GET" || req.method === "DELETE" ? undefined : await req.text();
@@ -55,7 +55,7 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   const upstreamRes = await fetch(upstream, {
     method: req.method,
     headers: {
-      authorization: `Bearer ${env.IRIS_API_TOKEN}`,
+      authorization: `Bearer ${env.WATCHFIRE_API_TOKEN}`,
       "content-type": req.headers.get("content-type") ?? "application/json",
       accept: "application/json",
       "x-trace-id": trace_id,

@@ -1,6 +1,6 @@
 // OpenObserve live integration tests. Gated off by default.
 // Runs when OPENOBSERVE_URL + USER + PASSWORD are set AND
-// IRIS_RUN_OO_INTEGRATION=1.
+// WATCHFIRE_RUN_OO_INTEGRATION=1.
 
 import { describe, expect, it } from 'vitest';
 import { listStreams, parseDuration, searchLogs } from './openobserve.js';
@@ -12,7 +12,7 @@ try {
 }
 
 const shouldRun =
-  process.env['IRIS_RUN_OO_INTEGRATION'] === '1' &&
+  process.env['WATCHFIRE_RUN_OO_INTEGRATION'] === '1' &&
   !!process.env['OPENOBSERVE_URL'] &&
   !!process.env['OPENOBSERVE_USER'] &&
   !!process.env['OPENOBSERVE_PASSWORD'];

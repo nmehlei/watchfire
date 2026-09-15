@@ -27,7 +27,7 @@ function run(overrides: Partial<Run> = {}): Run {
     tokens_cached: 800,
     cost_eur: 0.015,
     error: null,
-    transcript_path: '/var/lib/iris/transcripts/2.jsonl',
+    transcript_path: '/var/lib/watchfire/transcripts/2.jsonl',
     ...overrides,
   };
 }

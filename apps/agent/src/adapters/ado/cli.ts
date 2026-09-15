@@ -45,7 +45,7 @@ function printHelp(): void {
   process.stdout.write(
     [
       'Usage: check-ado --tenant <id> [--project <name>] [--timeout <ms>] [--tenants-path <path>]',
-      '  --tenants-path <path>  tenant registry (default: $IRIS_TENANTS_PATH, else config/tenants.yaml)',
+      '  --tenants-path <path>  tenant registry (default: $WATCHFIRE_TENANTS_PATH, else config/tenants.yaml)',
       '',
       'Reports Azure DevOps pipelines whose latest default-branch run failed.',
       'Read-only. The PAT is read from the env var named by the tenant config.',

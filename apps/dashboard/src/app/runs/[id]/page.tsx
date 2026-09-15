@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { irisFetch } from "@/lib/watchfire";
+import { watchfireFetch } from "@/lib/watchfire";
 import { FindingsList, Run, type FindingListItem } from "@/lib/schemas";
 import { durationSpan, fmtInt, relativeTime } from "@/lib/time";
 
@@ -41,7 +41,7 @@ export default async function RunDetailPage({
   const numeric = Number(id);
   if (!Number.isInteger(numeric) || numeric < 1) notFound();
 
-  const runRes = await irisFetch(`/api/runs/${numeric}`);
+  const runRes = await watchfireFetch(`/api/runs/${numeric}`);
   if (runRes.status === 404) notFound();
 
   let runBody: unknown;
@@ -87,7 +87,7 @@ export default async function RunDetailPage({
   // the run itself, since this only matters if the run loaded).
   const findingsBody = await safe(
     (async () => {
-      const res = await irisFetch(`/api/runs/${numeric}/findings`);
+      const res = await watchfireFetch(`/api/runs/${numeric}/findings`);
       if (!res.ok) throw new Error(`Watchfire ${res.status}`);
       return res.json();
     })(),

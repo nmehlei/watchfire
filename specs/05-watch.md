@@ -53,7 +53,7 @@ OpenObserve will sign webhooks when configured; v1 ships with verification code 
 
 - If `OPENOBSERVE_WEBHOOK_SECRET` is set, verify the signature on every request; reject mismatches with 401.
 - If the secret is unset, accept all requests (dev / not-yet-configured mode) and log a warn on every intake: `watch: webhook signature not verified (no secret configured)`.
-- `IRIS_WEBHOOK_VERIFY=false` explicitly disables verification even when the secret is set. Reserved for emergency bypass / local testing; emits a warn on every intake.
+- `WATCHFIRE_WEBHOOK_VERIFY=false` explicitly disables verification even when the secret is set. Reserved for emergency bypass / local testing; emits a warn on every intake.
 
 The default posture is: **verify when possible, don't block deployment on OO's signing setup for v1.** Flip to "verify always, fail closed if no secret" once OO is producing signed payloads in all environments. Tracked as an ops task in `docs/operations.md`.
 
@@ -255,7 +255,7 @@ The wallclock cap (60s) maps to `status='truncated'` if it trips. An in-flight t
 
 1. Finalize the `runs` row: `completed_at`, `status`, `verdict`, `page_sent`, `finding_count`, `tokens_{in,out,cached}`, `cost_eur`, `transcript_path`, `error` (if suppressed or errored).
 2. If `verdict='page'` AND rate-limit check passes: send Telegram 🚨 (format per `07-reporting.md`).
-3. Archive transcript to `/var/lib/iris/transcripts/<run_id>.jsonl`.
+3. Archive transcript to `/var/lib/watchfire/transcripts/<run_id>.jsonl`.
 
 No retention sweep in watch — that's a nightly responsibility. No healthchecks ping — watch is event-driven, not a heartbeat signal.
 

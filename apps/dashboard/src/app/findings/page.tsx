@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { irisJson } from "@/lib/watchfire";
+import { watchfireJson } from "@/lib/watchfire";
 import {
   FindingsList,
   type FindingListItem,
@@ -88,7 +88,7 @@ export default async function FindingsListPage({
   // exist even when the active view is empty — so an all-resolved moment
   // (e.g. right after a nightly clears everything) doesn't look broken.
   const data = await safe(
-    irisJson<unknown>("/api/findings?limit=50&include_resolved=true&include_muted=true"),
+    watchfireJson<unknown>("/api/findings?limit=50&include_resolved=true&include_muted=true"),
   );
   const parsed = data ? FindingsList.safeParse(data) : null;
   const all = parsed?.success ? parsed.data.findings : [];

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# iris-shell — forced SSH command on Watchfire target hosts.
+# watchfire-shell — forced SSH command on Watchfire target hosts.
 # See specs/08-safety.md §Layer 3.
 #
-# Invoked via authorized_keys command="/usr/local/bin/iris-shell".
+# Invoked via authorized_keys command="/usr/local/bin/watchfire-shell".
 # Parses $SSH_ORIGINAL_COMMAND against a strict allowlist of read-only
 # binaries and exits 2 with a single stderr line on any deviation.
 
 set -u  # not -e: we want to die via explicit `die` calls with clear messages.
 
-PATHS_ALLOW="${IRIS_PATHS_ALLOW:-/etc/iris/paths.allow}"
+PATHS_ALLOW="${WATCHFIRE_PATHS_ALLOW:-/etc/watchfire/paths.allow}"
 
 die() {
-  echo "iris-shell: $1" >&2
+  echo "watchfire-shell: $1" >&2
   exit 2
 }
 

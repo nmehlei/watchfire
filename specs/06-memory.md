@@ -8,7 +8,7 @@ Display and formatting rules — including the 7-day resolved-findings cutoff an
 
 ## Storage
 
-One SQLite file at `/var/lib/iris/iris.db`, on the mounted `iris-data` volume. Single file, no replicas. Backups are out of scope for memory — if we lose the file we lose historical lifecycle state but gain it back over a few nights (every ongoing finding re-surfaces as 🆕 new, and normal lifecycle resumes). Acceptable given the scale.
+One SQLite file at `/var/lib/watchfire/watchfire.db`, on the mounted `watchfire-data` volume. Single file, no replicas. Backups are out of scope for memory — if we lose the file we lose historical lifecycle state but gain it back over a few nights (every ongoing finding re-surfaces as 🆕 new, and normal lifecycle resumes). Acceptable given the scale.
 
 PRAGMAs set at open:
 

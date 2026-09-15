@@ -29,7 +29,7 @@ This spec does **not** own: the `findings` schema or the underlying queries (06)
 
 ## Mounting
 
-In-process, mounted on the existing HTTP server (the same Node process described in `01-architecture.md` §Components). Both the MCP handler and the REST handlers share the DB connection, the tenant registry, and the resource graph with the rest of `iris-core`. No sidecar.
+In-process, mounted on the existing HTTP server (the same Node process described in `01-architecture.md` §Components). Both the MCP handler and the REST handlers share the DB connection, the tenant registry, and the resource graph with the rest of `watchfire-core`. No sidecar.
 
 Why not a sidecar binary opening the DB read-only:
 
@@ -47,7 +47,7 @@ Why not a sidecar binary opening the DB read-only:
 
 ## Auth
 
-Single bearer token, env var `IRIS_API_TOKEN`, generated as a 32-byte hex string at bootstrap. The token gates **both** the MCP and REST surfaces — one secret, one trust scope, one rotation surface. Storage and rotation procedure are owned by `01-architecture.md §Secret management`.
+Single bearer token, env var `WATCHFIRE_API_TOKEN`, generated as a 32-byte hex string at bootstrap. The token gates **both** the MCP and REST surfaces — one secret, one trust scope, one rotation surface. Storage and rotation procedure are owned by `01-architecture.md §Secret management`.
 
 Verification at every request (MCP and REST alike):
 
@@ -60,7 +60,7 @@ No per-IP rate limiting in v1: one operator + one dashboard, low single-digit RP
 After rotation the operator updates the token in:
 
 1. The dashboard App Service's app settings (so the dashboard's server-side fetcher picks it up at next deploy / restart).
-2. Their local Claude Code MCP config (e.g. `claude mcp add iris … --header "Authorization: Bearer <new>" --scope user --force`).
+2. Their local Claude Code MCP config (e.g. `claude mcp add watchfire … --header "Authorization: Bearer <new>" --scope user --force`).
 
 The exact rotation procedure (where the secret lives, how it's edited, what re-deploy steps it triggers) is `01 §Secret management`'s problem, not this spec's.
 
@@ -229,7 +229,7 @@ Equivalent of `recent_findings`.
 | `GET /api/cost-window?days=` | `{ total_eur, by_type: {nightly, watch}, daily_buckets: Array<{date, eur}> }`. Default 30 days, max 90. | `cost_window` |
 | `GET /api/adapters/health` | `Array<{ source, emits_observations, last_observed_at, observation_count_24h }>`. Adapters that never emit report `emits_observations: false`; render those as "no telemetry", not stale. | `adapter_health` |
 
-All gated by the same bearer. All emit one `iris.api.request` audit event per call (per §Audit).
+All gated by the same bearer. All emit one `watchfire.api.request` audit event per call (per §Audit).
 
 ### Write endpoints (Watchfire-state only)
 
@@ -309,11 +309,11 @@ Token values are never echoed in errors, never logged, never included in audit e
 
 ## Audit
 
-Every MCP tool invocation and every REST request emits one structured log event to OpenObserve, in the same `iris.*` stream as the rest of the process:
+Every MCP tool invocation and every REST request emits one structured log event to OpenObserve, in the same `watchfire.*` stream as the rest of the process:
 
 ```json
 {
-  "event": "iris.api.request",
+  "event": "watchfire.api.request",
   "surface": "mcp" | "rest",
   "operation": "get_finding" | "recent_findings",
   "args": { /* validated args, sanitized */ },
@@ -340,7 +340,7 @@ apps/agent/src/api/
     auth.ts            # bearer token verification (timingSafeEqual); used by both surfaces
     format.ts          # short_id, age_days, affects expansion, escalating computation
     resolve-id.ts      # the prefix-resolution rule (shared with /mute in 10)
-    audit.ts           # iris.api.request emitter
+    audit.ts           # watchfire.api.request emitter
     errors.ts          # internal error codes; transport-level wrappers live in mcp/ and rest/
     types.ts           # DTOs for both surfaces
     duration.ts        # parse mute duration ("30m" / "2h" / "7d"); shared with bot/duration
@@ -393,7 +393,7 @@ Operator responsibility: do not configure the MCP into a Claude session running 
 
 ## Implementation status
 
-**v1 — shipped 2026-05-04.** `GET /api/findings`, `GET /api/findings/:id`, `POST /mcp` (with `get_finding` and `recent_findings`) live on production behind `IRIS_API_TOKEN`. See `git log apps/agent/src/api/` for the trail.
+**v1 — shipped 2026-05-04.** `GET /api/findings`, `GET /api/findings/:id`, `POST /mcp` (with `get_finding` and `recent_findings`) live on production behind `WATCHFIRE_API_TOKEN`. See `git log apps/agent/src/api/` for the trail.
 
 **v2 — in flight (driven by spec 12).** Adds the additional read endpoints (runs, search, cost-window, adapter-health), the write endpoints (`POST/DELETE /api/mutes`), the streaming surface (`GET /api/events`), and the matching MCP tools. Unshipped at time of writing; lands in lockstep with the Watchfire-Dashboard implementation per `12-dashboard.md` §Build order.
 

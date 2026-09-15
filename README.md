@@ -81,15 +81,15 @@ export ANTHROPIC_API_KEY=…
 export TELEGRAM_BOT_TOKEN=…
 export TELEGRAM_CHAT_ID=…
 # Paths are relative to apps/agent; the defaults point at /etc and /var.
-export IRIS_TENANTS_PATH=config/tenants.yaml
-export IRIS_RESOURCES_PATH=config/resources.yaml
-export IRIS_DB_PATH=data/iris.db
+export WATCHFIRE_TENANTS_PATH=config/tenants.yaml
+export WATCHFIRE_RESOURCES_PATH=config/resources.yaml
+export WATCHFIRE_DB_PATH=data/watchfire.db
 
 npm run dev
 ```
 
 Watchfire listens on port 8080 — `curl localhost:8080/health` should answer
-`{"ok":true}`. Set `IRIS_API_TOKEN` as well to enable the REST API and MCP endpoint.
+`{"ok":true}`. Set `WATCHFIRE_API_TOKEN` as well to enable the REST API and MCP endpoint.
 
 The [usage guide](docs/usage.md) covers configuring real tenants, credentials for
 each system, and what to expect from the first run.

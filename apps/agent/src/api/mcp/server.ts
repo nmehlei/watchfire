@@ -96,7 +96,7 @@ function toResult(out: Outcome, okPayload: unknown): {
 
 function buildServer(cfg: McpRouteConfig): Server {
   const server = new Server(
-    { name: 'iris', version: '1.0.0' },
+    { name: 'watchfire', version: '1.0.0' },
     { capabilities: { tools: {} } },
   );
 
@@ -238,7 +238,7 @@ export function registerMcpRoute(app: FastifyInstance, cfg: McpRouteConfig): voi
       reply.hijack();
       await transport.handleRequest(req.raw, reply.raw, req.body);
     } catch (err) {
-      cfg.log('iris.api.error', {
+      cfg.log('watchfire.api.error', {
         surface: 'mcp',
         error: err instanceof Error ? err.message : String(err),
       });

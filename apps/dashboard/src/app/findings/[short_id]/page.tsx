@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Bell, BellOff } from "lucide-react";
-import { irisFetch } from "@/lib/watchfire";
+import { watchfireFetch } from "@/lib/watchfire";
 import { FindingDetail, MuteDuration } from "@/lib/schemas";
 import { relativeTime } from "@/lib/time";
 
@@ -14,7 +14,7 @@ async function muteFinding(formData: FormData) {
   const duration = String(formData.get("duration") ?? "");
   const parsed = MuteDuration.safeParse(duration);
   if (!id || !parsed.success) return;
-  const res = await irisFetch("/api/mutes", {
+  const res = await watchfireFetch("/api/mutes", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ id, duration: parsed.data }),
@@ -30,7 +30,7 @@ async function unmuteFinding(formData: FormData) {
   "use server";
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  const res = await irisFetch(`/api/mutes/${encodeURIComponent(id)}`, {
+  const res = await watchfireFetch(`/api/mutes/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
   if (!res.ok && res.status !== 404) {
@@ -47,7 +47,7 @@ export default async function FindingDetailPage({
 }) {
   const { short_id } = await params;
 
-  const res = await irisFetch(`/api/findings/${encodeURIComponent(short_id)}`);
+  const res = await watchfireFetch(`/api/findings/${encodeURIComponent(short_id)}`);
   if (res.status === 404) notFound();
 
   let body: unknown;

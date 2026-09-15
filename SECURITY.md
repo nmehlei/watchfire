@@ -32,7 +32,7 @@ act on the systems it watches:
 |---|---|
 | Reader-scoped credentials | Issued per system with read-only rights (see `docs/integrations/`) |
 | A command allowlist | `apps/agent/src/agent/safety.ts` |
-| A forced-command shell on SSH targets | `infra/ssh/iris-shell.sh` |
+| A forced-command shell on SSH targets | `infra/ssh/watchfire-shell.sh` |
 
 **Any way to make Watchfire write, mutate, deploy or delete on a monitored system is a
 vulnerability** — including through prompt injection via log lines, HTTP bodies or
@@ -48,7 +48,7 @@ These are known properties of the current design, documented in
 
 - OpenObserve webhooks are accepted **unverified** when `OPENOBSERVE_WEBHOOK_SECRET`
   is not set. Operators are told to set it.
-- The REST and MCP surfaces use a single shared bearer token (`IRIS_API_TOKEN`)
+- The REST and MCP surfaces use a single shared bearer token (`WATCHFIRE_API_TOKEN`)
   rather than per-user credentials.
 - Transcripts record tool output verbatim and are kept indefinitely by default; they
   should be treated as sensitive.

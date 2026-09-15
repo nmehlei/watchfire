@@ -15,7 +15,7 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 CONTEXT=""
 NAMESPACE=kube-system
-SA=iris-reader
+SA=watchfire-reader
 TOKEN_DURATION=720h   # 30 days
 
 while [ $# -gt 0 ]; do
@@ -46,7 +46,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: iris-extra-read
+  name: watchfire-extra-read
 rules:
   - apiGroups: [""]
     resources: [nodes]
@@ -55,7 +55,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: iris-view
+  name: watchfire-view
 subjects:
   - kind: ServiceAccount
     name: $SA
@@ -68,7 +68,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: iris-extra
+  name: watchfire-extra
 subjects:
   - kind: ServiceAccount
     name: $SA
@@ -76,7 +76,7 @@ subjects:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: iris-extra-read
+  name: watchfire-extra-read
 EOF
 
 log "minting bound token (duration=$TOKEN_DURATION)"
@@ -103,10 +103,10 @@ contexts:
   - name: initech-prod
     context:
       cluster: initech
-      user: iris
+      user: watchfire
 current-context: initech-prod
 users:
-  - name: iris
+  - name: watchfire
     user:
       token: $TOKEN
 EOF

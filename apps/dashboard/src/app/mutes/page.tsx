@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { Bell } from "lucide-react";
-import { irisFetch, irisJson } from "@/lib/watchfire";
+import { watchfireFetch, watchfireJson } from "@/lib/watchfire";
 import { MutesList, type ActiveMute } from "@/lib/schemas";
 import { relativeTime } from "@/lib/time";
 
@@ -22,7 +22,7 @@ async function unmuteAction(formData: FormData) {
   if (!fingerprint) return;
   // Watchfire accepts the full fingerprint or any disambiguating prefix
   // (>= 6 hex) — pass the full one we already have to be unambiguous.
-  const res = await irisFetch(`/api/mutes/${encodeURIComponent(fingerprint)}`, {
+  const res = await watchfireFetch(`/api/mutes/${encodeURIComponent(fingerprint)}`, {
     method: "DELETE",
   });
   if (!res.ok && res.status !== 404) {
@@ -43,7 +43,7 @@ function expiresClass(m: ActiveMute): string {
 }
 
 export default async function MutesPage() {
-  const data = await safe(irisJson<unknown>("/api/mutes"));
+  const data = await safe(watchfireJson<unknown>("/api/mutes"));
   const parsed = data ? MutesList.safeParse(data) : null;
   const mutes = parsed?.success ? parsed.data.mutes : [];
 

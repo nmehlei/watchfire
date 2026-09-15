@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Generate (or reuse) the iris ed25519 keypair under infra/ssh/.
-# Emits the public key (for authorized_keys) and IRIS_SSH_PRIVATE_KEY_B64=... to stdout.
+# Generate (or reuse) the watchfire ed25519 keypair under infra/ssh/.
+# Emits the public key (for authorized_keys) and WATCHFIRE_SSH_PRIVATE_KEY_B64=... to stdout.
 # Idempotent: reuses existing key file if present.
 #
-# Usage: ssh-keygen-iris.sh [--dir infra/ssh]
+# Usage: ssh-keygen-watchfire.sh [--dir infra/ssh]
 
 set -euo pipefail
 
@@ -19,14 +19,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-KEY="$DIR/iris_ed25519"
+KEY="$DIR/watchfire_ed25519"
 mkdir -p "$DIR"
 
 if [ -f "$KEY" ]; then
   log "key exists at $KEY (reusing)"
 else
   log "generating ed25519 keypair at $KEY"
-  ssh-keygen -t ed25519 -N '' -C "iris@$(hostname -s)" -f "$KEY" >&2
+  ssh-keygen -t ed25519 -N '' -C "watchfire@$(hostname -s)" -f "$KEY" >&2
   chmod 600 "$KEY"
 fi
 
@@ -35,11 +35,11 @@ B64=$(base64 < "$KEY" | tr -d '\n')
 
 cat <<EOF
 # --- Watchfire SSH key ---
-# Public key (paste into each target host's /home/iris/.ssh/authorized_keys
-# with: command="/usr/local/bin/iris-shell",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-user-rc <PUBKEY>):
+# Public key (paste into each target host's /home/watchfire/.ssh/authorized_keys
+# with: command="/usr/local/bin/watchfire-shell",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-user-rc <PUBKEY>):
 # $(cat "$KEY.pub")
 
-IRIS_SSH_PRIVATE_KEY_B64=$B64
+WATCHFIRE_SSH_PRIVATE_KEY_B64=$B64
 EOF
 
-log "done. Pubkey echoed as a comment above; private key emitted as IRIS_SSH_PRIVATE_KEY_B64."
+log "done. Pubkey echoed as a comment above; private key emitted as WATCHFIRE_SSH_PRIVATE_KEY_B64."

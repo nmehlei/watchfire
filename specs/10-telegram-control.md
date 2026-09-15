@@ -25,7 +25,7 @@ Payload:
 
 ```json
 {
-  "url": "https://iris.ops-host.example.com/webhook/telegram",
+  "url": "https://watchfire.ops-host.example.com/webhook/telegram",
   "secret_token": "<TELEGRAM_WEBHOOK_SECRET>",
   "allowed_updates": ["message"],
   "drop_pending_updates": false,
@@ -123,7 +123,7 @@ Behavior: run the "list active mutes" query from 06, render as one HTML message:
 
 If empty: `🔔 No active mutes.`
 
-Shows up to 50; if more, append `… and N more — see /var/lib/iris/iris.db`. (Realistically we'll never hit this; one operator, four tenants.)
+Shows up to 50; if more, append `… and N more — see /var/lib/watchfire/watchfire.db`. (Realistically we'll never hit this; one operator, four tenants.)
 
 ### `/help`
 
@@ -164,7 +164,7 @@ The operator types `<code>9b9896</code>` as displayed in a digest. Resolution ru
 
 Why allow shorter than 6? The operator might paste from a place that truncated the ID, or memorize a 4-char prefix for a recurring finding. Cheap to support (length floor of 4 still catches typos), big UX win.
 
-Why allow longer than 6? They might paste the full fingerprint from `iris.db`. No reason to reject.
+Why allow longer than 6? They might paste the full fingerprint from `watchfire.db`. No reason to reject.
 
 ## Mute semantics
 
@@ -231,5 +231,5 @@ Pure functions for parsing and resolution; DB writes via 06's repository helpers
 - **Wildcards / class-level mutes.** v1 mutes by exact fingerprint. A "mute every brute-force finding across all tenants" pattern (issue_class wildcard) could be useful but isn't urgent — the four tenants generate few enough fingerprints that one-by-one is tolerable. Defer.
 - **Audit log of mutes.** Currently the `mutes` table itself is the audit (rows with `created_at`, `source`). If someone wants "who muted what when", that's already there. No separate log for v1.
 - **Two-way edits.** Telegram supports edited messages; we ignore them (`allowed_updates: ["message"]` only includes new messages). Editing `/mute 9b9896` to `/mute 9b9896 30d` does nothing. Acceptable — the operator can just send a follow-up `/mute 9b9896 30d` to extend.
-- **Bot username collision.** If the operator runs Watchfire in a group chat, the bot needs `/mute@iris_bot` syntax. v1 assumes a private chat. If group-chat support is needed later, the parser strips `@<bot-name>` before dispatch — small change, just not implemented.
+- **Bot username collision.** If the operator runs Watchfire in a group chat, the bot needs `/mute@watchfire_bot` syntax. v1 assumes a private chat. If group-chat support is needed later, the parser strips `@<bot-name>` before dispatch — small change, just not implemented.
 - **Inline keyboards.** Telegram supports tap-able buttons attached to messages. A "[Mute 7d] [Mute forever] [Unmute]" row under each finding in digests would be a UX upgrade but adds non-trivial state (callback queries, button id → fingerprint mapping). v1 ships with text commands only; inline buttons are a future polish.

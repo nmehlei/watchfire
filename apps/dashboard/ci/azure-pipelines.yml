@@ -5,10 +5,10 @@
 #   2. deploy   — package the standalone output and push to App Service
 #
 # Prereqs (one-time, manually):
-#   * Pipeline variable group `iris-dashboard` (optional, for future secrets)
-#   * Azure RM service connection named `iris-dashboard-deploy-sc`,
-#     scoped to RG `iris-dashboard-RG` with role `Website Contributor`
-#   * The App Service `iris-dashboard` already provisioned by your-iac-repo
+#   * Pipeline variable group `watchfire-dashboard` (optional, for future secrets)
+#   * Azure RM service connection named `watchfire-dashboard-deploy-sc`,
+#     scoped to RG `watchfire-dashboard-RG` with role `Website Contributor`
+#   * The App Service `watchfire-dashboard` already provisioned by your-iac-repo
 
 trigger:
   branches:
@@ -28,10 +28,10 @@ pr:
 
 variables:
   nodeVersion: '22.x'
-  webAppName: 'iris-dashboard'
-  serviceConnection: 'iris-dashboard-deploy-sc'
-  buildArtifactName: 'iris-dashboard-standalone'
-  irisApiUrl: 'https://iris.example.com'
+  webAppName: 'watchfire-dashboard'
+  serviceConnection: 'watchfire-dashboard-deploy-sc'
+  buildArtifactName: 'watchfire-dashboard-standalone'
+  watchfireApiUrl: 'https://watchfire.example.com'
 
 stages:
   - stage: build
@@ -72,12 +72,12 @@ stages:
 
           - script: npm run build -w @watchfire/dashboard
             displayName: Next build (standalone)
-            # IRIS_API_URL is the only var the build needs at this stage
+            # WATCHFIRE_API_URL is the only var the build needs at this stage
             # (used for typed-routes generation if we ever generate types
             # from Watchfire). The token + AAD secrets land at runtime via
             # App Service app_settings.
             env:
-              IRIS_API_URL: $(irisApiUrl)
+              WATCHFIRE_API_URL: $(watchfireApiUrl)
 
           - script: ./apps/dashboard/ci/assemble-standalone.sh
             displayName: Assemble standalone tree
@@ -105,7 +105,7 @@ stages:
         displayName: AzureWebApp@1
         pool:
           vmImage: 'ubuntu-latest'
-        environment: 'iris-dashboard-production'
+        environment: 'watchfire-dashboard-production'
         strategy:
           runOnce:
             deploy:

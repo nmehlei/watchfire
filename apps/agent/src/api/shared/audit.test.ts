@@ -3,7 +3,7 @@ import { emitApiAudit } from './audit.js';
 import { enterTrace, normalizeTraceId } from './trace.js';
 
 describe('emitApiAudit', () => {
-  it('emits a structured iris.api.request event', () => {
+  it('emits a structured watchfire.api.request event', () => {
     const log = vi.fn();
     emitApiAudit(log, {
       surface: 'rest',
@@ -15,7 +15,7 @@ describe('emitApiAudit', () => {
     });
     expect(log).toHaveBeenCalledTimes(1);
     expect(log).toHaveBeenCalledWith(
-      'iris.api.request',
+      'watchfire.api.request',
       expect.objectContaining({
         surface: 'rest',
         operation: 'get_finding',
@@ -38,7 +38,7 @@ describe('emitApiAudit', () => {
       latency_ms: 1,
     });
     expect(log).toHaveBeenCalledWith(
-      'iris.api.request',
+      'watchfire.api.request',
       expect.objectContaining({ operation: null, args: null, result: 'unauthorized' }),
     );
   });
@@ -61,7 +61,7 @@ describe('emitApiAudit', () => {
       result_count: 0, latency_ms: 1,
     });
     expect(log).toHaveBeenCalledWith(
-      'iris.api.request',
+      'watchfire.api.request',
       expect.objectContaining({ trace_id: 'deadbeefcafef00ddeadbeefcafef00d' }),
     );
   });

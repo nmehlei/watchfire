@@ -42,7 +42,7 @@ describe('runs', () => {
       tokensOut: 500,
       tokensCached: 800,
       costEur: 0.11,
-      transcriptPath: '/var/lib/iris/transcripts/1.jsonl',
+      transcriptPath: '/var/lib/watchfire/transcripts/1.jsonl',
     });
     const run = getRun(db, id)!;
     expect(run.status).toBe('success');
@@ -50,7 +50,7 @@ describe('runs', () => {
     expect(run.turn_count).toBe(14);
     expect(run.tokens_in).toBe(1000);
     expect(run.cost_eur).toBeCloseTo(0.11);
-    expect(run.transcript_path).toBe('/var/lib/iris/transcripts/1.jsonl');
+    expect(run.transcript_path).toBe('/var/lib/watchfire/transcripts/1.jsonl');
     expect(run.completed_at).not.toBeNull();
   });
 

@@ -9,7 +9,7 @@ import { openTranscript } from './transcript.js';
 describe('openTranscript', () => {
   let dir: string;
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'iris-transcript-'));
+    dir = mkdtempSync(join(tmpdir(), 'watchfire-transcript-'));
   });
   afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

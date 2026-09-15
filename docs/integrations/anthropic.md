@@ -13,7 +13,7 @@ The agent backend. Default model is Haiku; nightly may escalate to Sonnet via `c
 ## One-time setup
 
 1. <https://console.anthropic.com/> → **Settings → API Keys → Create Key**.
-2. Name it `iris-prod` (or `iris-dev` for local).
+2. Name it `watchfire-prod` (or `watchfire-dev` for local).
 3. Set a workspace-level spend limit matching your budget (target €5/month per spec 00). Anthropic shows USD; convert.
 4. Copy the key (`sk-ant-api03-…`).
 

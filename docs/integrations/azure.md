@@ -19,10 +19,10 @@ Spec refs: [`02-tenants.md` §Credential scopes](../../specs/02-tenants.md), [`0
 | Name | Description |
 |---|---|
 | `AZ_SP_ACME_TENANT_ID` | AAD tenant for acme/globex/umbrella. |
-| `AZ_SP_ACME_CLIENT_ID` | App ID of `iris-reader-acme`. |
+| `AZ_SP_ACME_CLIENT_ID` | App ID of `watchfire-reader-acme`. |
 | `AZ_SP_ACME_CLIENT_SECRET` | Service Principal secret. |
 | `AZ_SP_INITECH_TENANT_ID` | AAD tenant for initech. |
-| `AZ_SP_INITECH_CLIENT_ID` | App ID of `iris-reader-initech`. |
+| `AZ_SP_INITECH_CLIENT_ID` | App ID of `watchfire-reader-initech`. |
 | `AZ_SP_INITECH_CLIENT_SECRET` | Service Principal secret. |
 
 > Naming: spec uses `sp_env: AZ_SP_MAIN` as the *handle*; reality renamed to `AZ_SP_ACME` since the AAD tenant *is* acme. The three concrete env vars use `AZ_SP_ACME_*` as a prefix. (Inferred decision — see [`docs/integrations/README.md` §Conventions](README.md).)
@@ -42,14 +42,14 @@ The script does the work. One invocation per AAD tenant. By default it grants `R
 ```bash
 az login --tenant <acme-aad-tenant-id>
 
-./scripts/setup/azure-sp.sh iris-reader-acme
+./scripts/setup/azure-sp.sh watchfire-reader-acme
 # auto-discovers the (single) acme sub and grants Reader on it
 ```
 
 If you want to override discovery (e.g. multiple subs in this AAD some day):
 
 ```bash
-./scripts/setup/azure-sp.sh iris-reader-acme <acme-sub-id>
+./scripts/setup/azure-sp.sh watchfire-reader-acme <acme-sub-id>
 ```
 
 ### INITECH tenant
@@ -57,7 +57,7 @@ If you want to override discovery (e.g. multiple subs in this AAD some day):
 ```bash
 az login --tenant <initech-aad-tenant-id>
 
-./scripts/setup/azure-sp.sh iris-reader-initech
+./scripts/setup/azure-sp.sh watchfire-reader-initech
 # auto-discovers initech's subs (typically just one)
 ```
 
@@ -72,7 +72,7 @@ The script:
 Append to your local `.env`:
 
 ```bash
-./scripts/setup/azure-sp.sh iris-reader-main <subs...> >> .env
+./scripts/setup/azure-sp.sh watchfire-reader-main <subs...> >> .env
 ```
 
 Or copy/paste the block into `ansible/group_vars/secrets.yml` (after `ansible-vault decrypt`) for production.
@@ -90,7 +90,7 @@ az account list -o table          # shows the granted subs
 az resource list --query 'length(@)'   # any non-error result confirms Reader
 
 # Read-only check: this MUST fail
-az group create -n iris-test-fail -l westeurope
+az group create -n watchfire-test-fail -l westeurope
 # → AuthorizationFailed (good)
 ```
 
@@ -100,7 +100,7 @@ az group create -n iris-test-fail -l westeurope
 
 ```bash
 # Re-running the setup script is the rotation:
-./scripts/setup/azure-sp.sh iris-reader-acme
+./scripts/setup/azure-sp.sh watchfire-reader-acme
 ```
 
 It detects the existing SP and runs `az ad sp credential reset`. The old secret is invalidated. Two secrets can co-exist briefly if you skip `--end-date` cleanup, but `credential reset` defaults to invalidating the old one — apply the new env to the container immediately after.

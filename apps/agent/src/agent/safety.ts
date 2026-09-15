@@ -62,7 +62,7 @@ const HARD_BLOCK_PATTERNS: readonly HardBlockPattern[] = [
   // Secret-path reads
   {
     name: 'secret-path-read',
-    re: /\b(cat|less|more|head|tail|strings|xxd|od|base64|cp|tar|rsync)\b[^|;&]*?(\/run\/iris\/|\/etc\/iris\/secrets\/)/,
+    re: /\b(cat|less|more|head|tail|strings|xxd|od|base64|cp|tar|rsync)\b[^|;&]*?(\/run\/watchfire\/|\/etc\/watchfire\/secrets\/)/,
     reason: 'secret path read',
   },
 

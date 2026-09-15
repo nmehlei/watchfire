@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { irisJson } from "@/lib/watchfire";
+import { watchfireJson } from "@/lib/watchfire";
 import { RunsList, type Run, type RunType } from "@/lib/schemas";
 import { durationSpan, parseSqliteUtc, relativeTime } from "@/lib/time";
 
@@ -59,7 +59,7 @@ export default async function RunsListPage({
   const query = new URLSearchParams({ limit: "50" });
   if (typeFilter) query.set("type", typeFilter);
 
-  const data = await safe(irisJson<unknown>(`/api/runs?${query.toString()}`));
+  const data = await safe(watchfireJson<unknown>(`/api/runs?${query.toString()}`));
   const parsed = data ? RunsList.safeParse(data) : null;
   const rows = parsed?.success
     ? [...parsed.data.runs].sort(

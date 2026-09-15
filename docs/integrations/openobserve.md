@@ -38,11 +38,11 @@ Implication for the Watchfire observability adapter:
 
 ## One-time setup
 
-The credential is already set up — `iris@<your-domain>` (or whichever account is in `.env`). For a clean install on a new operator instance:
+The credential is already set up — `watchfire@<your-domain>` (or whichever account is in `.env`). For a clean install on a new operator instance:
 
 1. Log in to `$OPENOBSERVE_URL` as admin.
 2. **IAM → Users → Add User**:
-   - Email: `iris@<your-domain>`.
+   - Email: `watchfire@<your-domain>`.
    - Strong password (`openssl rand -hex 24`).
    - Role: read-only at the org level (`Viewer`) for the `default` org.
 3. Drop email + password into `.env` as `OPENOBSERVE_USER` / `OPENOBSERVE_PASSWORD`.

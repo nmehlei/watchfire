@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openDb, openMemoryDb } from './schema.js';
 
 function tempDbPath(): { path: string; cleanup: () => void } {
-  const dir = mkdtempSync(join(tmpdir(), 'iris-test-'));
+  const dir = mkdtempSync(join(tmpdir(), 'watchfire-test-'));
   return {
     path: join(dir, 'test.db'),
     cleanup: () => rmSync(dir, { recursive: true, force: true }),

@@ -48,6 +48,6 @@ playwright-report/
 /.superpowers/
 
 # Real tenant configuration — examples are committed, real files are not.
-# Production mounts the registry at runtime (IRIS_TENANTS_PATH).
+# Production mounts the registry at runtime (WATCHFIRE_TENANTS_PATH).
 /apps/agent/config/tenants.yaml
 /apps/agent/config/resources.yaml

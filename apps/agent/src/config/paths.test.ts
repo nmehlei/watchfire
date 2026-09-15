@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { defaultTenantsPath } from './paths.js';
 
 describe('defaultTenantsPath', () => {
-  it('prefers IRIS_TENANTS_PATH when set', () => {
-    expect(defaultTenantsPath({ IRIS_TENANTS_PATH: '/etc/iris/config/tenants.yaml' })).toBe(
-      '/etc/iris/config/tenants.yaml',
+  it('prefers WATCHFIRE_TENANTS_PATH when set', () => {
+    expect(defaultTenantsPath({ WATCHFIRE_TENANTS_PATH: '/etc/watchfire/config/tenants.yaml' })).toBe(
+      '/etc/watchfire/config/tenants.yaml',
     );
   });
 
@@ -13,6 +13,6 @@ describe('defaultTenantsPath', () => {
   });
 
   it('treats an empty value as unset', () => {
-    expect(defaultTenantsPath({ IRIS_TENANTS_PATH: '' })).toBe('config/tenants.yaml');
+    expect(defaultTenantsPath({ WATCHFIRE_TENANTS_PATH: '' })).toBe('config/tenants.yaml');
   });
 });

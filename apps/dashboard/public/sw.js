@@ -8,9 +8,9 @@
 // purges old versions atomically.
 
 const CACHE_VERSION = "v1";
-const STATIC_CACHE = `iris-static-${CACHE_VERSION}`;
-const API_CACHE = `iris-api-${CACHE_VERSION}`;
-const SHELL_CACHE = `iris-shell-${CACHE_VERSION}`;
+const STATIC_CACHE = `watchfire-static-${CACHE_VERSION}`;
+const API_CACHE = `watchfire-api-${CACHE_VERSION}`;
+const SHELL_CACHE = `watchfire-shell-${CACHE_VERSION}`;
 const ALL_CACHES = [STATIC_CACHE, API_CACHE, SHELL_CACHE];
 
 self.addEventListener("install", (event) => {
@@ -23,7 +23,7 @@ self.addEventListener("activate", (event) => {
       const names = await caches.keys();
       await Promise.all(
         names
-          .filter((n) => n.startsWith("iris-") && !ALL_CACHES.includes(n))
+          .filter((n) => n.startsWith("watchfire-") && !ALL_CACHES.includes(n))
           .map((n) => caches.delete(n)),
       );
       await self.clients.claim();

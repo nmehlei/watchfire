@@ -74,7 +74,7 @@ describe('POST /mcp', () => {
     // Either way, the body should parse and contain a result with serverInfo.
     const body = r.body;
     expect(body).toContain('"serverInfo"');
-    expect(body).toContain('iris');
+    expect(body).toContain('watchfire');
   });
 
   it('lists both tools via tools/list', async () => {

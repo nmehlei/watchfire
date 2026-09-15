@@ -20,7 +20,7 @@ For each Hetzner project:
 1. Log in to <https://console.hetzner.cloud/>.
 2. Switch to the target project (top-left dropdown).
 3. **Security → API tokens → Generate API Token**.
-4. Description: `iris-reader` (so you recognize it later).
+4. Description: `watchfire-reader` (so you recognize it later).
 5. Permissions: **Read** (not Read & Write).
 6. Generate. Copy the token. **You cannot view it again** — store immediately in your password manager and `.env`.
 

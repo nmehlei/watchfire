@@ -28,7 +28,7 @@ adapter side-effecting.
 Instead an adapter appends one trailer line per measurement to stdout:
 
 ```
-___IRIS_OBS: tenant=<id> source=<adapter> subject=<string> metric=<string> value=<number>
+___WATCHFIRE_OBS: tenant=<id> source=<adapter> subject=<string> metric=<string> value=<number>
 ```
 
 The runner watches Bash tool results in the SDK message stream, parses any
@@ -37,7 +37,7 @@ holds. Properties of this arrangement:
 
 - **Adapters stay pure.** They print; they do not persist. Side effects stay at the edge, in the runner.
 - **The agent needs no cooperation.** It does not call a tool, pass a `run_id`, or know observations exist. Nothing is lost when the model is busy or the run truncates mid-sweep.
-- **One convention.** `___IRIS_USAGE:` (04, `correlate-deep`) uses the same trailer shape. Parsers share a module.
+- **One convention.** `___WATCHFIRE_USAGE:` (04, `correlate-deep`) uses the same trailer shape. Parsers share a module.
 
 Rules:
 
@@ -75,7 +75,7 @@ apps/agent/bin/obs-alerts   --tenant <id> --since <dur>         # threshold aler
 
 Output: compact summary. For `obs-search`: top-N matching log lines with timestamps, level, service. For `obs-metrics`: min/max/avg/p95 + sparkline characters.
 
-Implementation: `iris-core/adapters/observability/{openobserve,signoz}.ts` implement `ObservabilityAdapter` interface:
+Implementation: `watchfire-core/adapters/observability/{openobserve,signoz}.ts` implement `ObservabilityAdapter` interface:
 
 ```ts
 interface ObservabilityAdapter {
@@ -98,7 +98,7 @@ No custom wrapper needed — `az` CLI is already the right shape. The agent call
 apps/agent/bin/az-as  --tenant <id>  <az args...>
 ```
 
-`az-as` resolves the tenant from the registry, logs in with the correct SP, sets the correct subscription, exports `IRIS_NAME_PREFIX` and `IRIS_SIBLING_PREFIXES` (see below), then execs `az`. Examples:
+`az-as` resolves the tenant from the registry, logs in with the correct SP, sets the correct subscription, exports `WATCHFIRE_NAME_PREFIX` and `WATCHFIRE_SIBLING_PREFIXES` (see below), then execs `az`. Examples:
 
 ```
 apps/agent/bin/az-as --tenant initech  monitor activity-log list --offset 24h
@@ -112,11 +112,11 @@ Where multiple tenants share one Azure subscription (currently acme, globex, umb
 
 `apps/agent/bin/az-as` surfaces this to the agent via two env vars set before `exec`:
 
-- `IRIS_NAME_PREFIX` — the active tenant's prefix (e.g. `Globex`), or empty for a catch-all tenant.
-- `IRIS_SIBLING_PREFIXES` — space-separated list of *other* tenants' prefixes that share this sub (e.g. `Globex Umbrella` when the active tenant is acme). Empty when the active tenant owns its sub outright (e.g. initech).
+- `WATCHFIRE_NAME_PREFIX` — the active tenant's prefix (e.g. `Globex`), or empty for a catch-all tenant.
+- `WATCHFIRE_SIBLING_PREFIXES` — space-separated list of *other* tenants' prefixes that share this sub (e.g. `Globex Umbrella` when the active tenant is acme). Empty when the active tenant owns its sub outright (e.g. initech).
 
 The agent's prompt instructs it to:
-- For a tenant with a non-empty prefix: filter list-style queries with `[?starts_with(name, '$IRIS_NAME_PREFIX')]`.
+- For a tenant with a non-empty prefix: filter list-style queries with `[?starts_with(name, '$WATCHFIRE_NAME_PREFIX')]`.
 - For a catch-all tenant: filter list-style queries to exclude every sibling prefix.
 - For a sub-owner tenant (no siblings): no filtering needed.
 
@@ -129,7 +129,7 @@ Read-only enforcement (unchanged by `name_prefix`):
 
 ## Adapter: Hetzner Cloud
 
-**Credentials**: read-only API token per Hetzner account + SSH key for `iris` user on boxes.
+**Credentials**: read-only API token per Hetzner account + SSH key for `watchfire` user on boxes.
 
 ### API path
 
@@ -154,11 +154,11 @@ apps/agent/bin/ssh-as --tenant initech --host k8s-01  "systemctl status kubelet"
 ```
 
 Restricted via:
-- Dedicated `iris` user on each box.
-- `authorized_keys` entry with `command="/usr/local/bin/iris-shell"` forced-command, limiting to an allowlist of read-only binaries (`df`, `free`, `uptime`, `journalctl --since`, `tail`, `ps`, `ss`, `systemctl status`, `cat` on whitelisted paths).
+- Dedicated `watchfire` user on each box.
+- `authorized_keys` entry with `command="/usr/local/bin/watchfire-shell"` forced-command, limiting to an allowlist of read-only binaries (`df`, `free`, `uptime`, `journalctl --since`, `tail`, `ps`, `ss`, `systemctl status`, `cat` on whitelisted paths).
 - No TTY, no port forwarding (`no-pty,no-port-forwarding,no-X11-forwarding`).
 
-`iris-shell` is a ~50-line bash script vetted once and checked into the repo.
+`watchfire-shell` is a ~50-line bash script vetted once and checked into the repo.
 
 ## Adapter: Kubernetes (initech)
 
@@ -246,7 +246,7 @@ At prompt time, only the `bin/` directory is on PATH. The agent's system prompt 
 ## Adding a new adapter
 
 1. Decide: does it need pluggable backends (like observability) or is it a single-backend wrapper (like Azure)?
-2. Add adapter module under `iris-core/adapters/<name>/`.
+2. Add adapter module under `watchfire-core/adapters/<name>/`.
 3. Add `apps/agent/bin/<name>` wrapper with `--tenant` flag.
 4. Extend `tenants.yaml` schema for its per-tenant config.
 5. Add deny patterns to the safety hook in the agent runner.
