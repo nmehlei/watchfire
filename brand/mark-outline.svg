@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Watchfire"><defs>
+  <linearGradient id="wfShield" x1=".1" y1="0" x2=".9" y2="1">
+    <stop offset="0" stop-color="#2E5FB8"/><stop offset="1" stop-color="#0E2A5C"/>
+  </linearGradient>
+  <linearGradient id="wfFlame" x1=".25" y1="1" x2=".55" y2="0">
+    <stop offset="0" stop-color="#E8471F"/><stop offset=".45" stop-color="#FF8A1E"/><stop offset="1" stop-color="#FFD166"/>
+  </linearGradient>
+  <linearGradient id="wfCore" x1=".3" y1="1" x2=".5" y2="0">
+    <stop offset="0" stop-color="#FF8A1E"/><stop offset="1" stop-color="#FFF3D0"/>
+  </linearGradient></defs><path d="M32 3.5 C36 5.6 46 9.2 55.4 11.6 C56.5 11.9 57 12.7 57 13.7 V32.6 C57 46.6 46.4 56.6 32 61.5 C17.6 56.6 7 46.6 7 32.6 V13.7 C7 12.7 7.5 11.9 8.6 11.6 C18 9.2 28 5.6 32 3.5 Z" fill="none" stroke="url(#wfShield)" stroke-width="4.4" stroke-linejoin="round"/><path d="M30.47 17.84 C33.46 22.90 38.98 26.81 38.98 32.79 C38.98 38.08 34.61 42.68 29.32 42.68 C24.03 42.68 19.66 38.31 19.66 33.02 C19.66 29.11 22.19 26.12 24.49 23.13 C25.18 26.12 26.56 27.73 28.17 28.42 C28.63 24.74 28.86 21.06 30.47 17.84 Z" fill="url(#wfFlame)"/><path d="M30.06 27.96 C31.85 30.72 34.38 33.02 34.38 36.24 C34.38 39.46 32.08 41.76 29.32 41.76 C26.56 41.76 24.26 39.69 24.26 36.70 C24.26 34.40 25.87 32.56 27.02 30.49 C27.48 32.33 28.40 33.48 29.32 33.94 C29.50 31.64 29.50 29.57 30.06 27.96 Z" fill="url(#wfCore)"/></svg>

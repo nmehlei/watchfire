@@ -1,26 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="Watchfire">
-  <mask id="b">
-    <rect width="24" height="24" fill="#fff"/>
-    <g stroke="#000" stroke-width="0.85" stroke-linecap="butt">
-      <line x1="13.76" y1="7.75" x2="22.179" y2="16.169"/>
-      <line x1="16.25" y1="10.24" x2="16.25" y2="22.146"/>
-      <line x1="16.25" y1="13.76" x2="7.831" y2="22.179"/>
-      <line x1="13.76" y1="16.25" x2="1.854" y2="16.25"/>
-      <line x1="10.24" y1="16.25" x2="1.821" y2="7.831"/>
-      <line x1="7.75" y1="13.76" x2="7.75" y2="1.854"/>
-      <line x1="7.75" y1="10.24" x2="16.169" y2="1.821"/>
-      <line x1="10.24" y1="7.75" x2="22.146" y2="7.75"/>
-    </g>
-  </mask>
-  <g mask="url(#b)">
-    <path d="M16.25 10.24 L22.179 16.169 A11 11 0 0 1 16.25 22.146 Z" fill="#95A0FF"/>
-    <path d="M16.25 13.76 L16.25 22.146 A11 11 0 0 1 7.831 22.179 Z" fill="#6D7BFF"/>
-    <path d="M13.76 16.25 L7.831 22.179 A11 11 0 0 1 1.854 16.25 Z" fill="#95A0FF"/>
-    <path d="M10.24 16.25 L1.854 16.25 A11 11 0 0 1 1.821 7.831 Z" fill="#6D7BFF"/>
-    <path d="M7.75 13.76 L1.821 7.831 A11 11 0 0 1 7.75 1.854 Z" fill="#95A0FF"/>
-    <path d="M7.75 10.24 L7.75 1.854 A11 11 0 0 1 16.169 1.821 Z" fill="#6D7BFF"/>
-    <path d="M10.24 7.75 L16.169 1.821 A11 11 0 0 1 22.146 7.75 Z" fill="#95A0FF"/>
-    <path d="M13.76 7.75 L22.146 7.75 A11 11 0 0 1 22.179 16.169 Z" fill="#6D7BFF"/>
-  </g>
-  <circle cx="12" cy="12" r="2.668" fill="#FFC46B"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Watchfire"><defs>
+  <linearGradient id="wfShield" x1=".1" y1="0" x2=".9" y2="1">
+    <stop offset="0" stop-color="#4C82E8"/><stop offset="1" stop-color="#17407F"/>
+  </linearGradient>
+  <linearGradient id="wfFlame" x1=".25" y1="1" x2=".55" y2="0">
+    <stop offset="0" stop-color="#E8471F"/><stop offset=".45" stop-color="#FF9A2E"/><stop offset="1" stop-color="#FFDC8A"/>
+  </linearGradient>
+  <linearGradient id="wfCore" x1=".3" y1="1" x2=".5" y2="0">
+    <stop offset="0" stop-color="#FF9A2E"/><stop offset="1" stop-color="#FFF3D0"/>
+  </linearGradient></defs><path d="M32 3.5 C36 5.6 46 9.2 55.4 11.6 C56.5 11.9 57 12.7 57 13.7 V32.6 C57 46.6 46.4 56.6 32 61.5 C17.6 56.6 7 46.6 7 32.6 V13.7 C7 12.7 7.5 11.9 8.6 11.6 C18 9.2 28 5.6 32 3.5 Z" fill="url(#wfShield)"/><path d="M33.50 13.40 C37.40 20.00 44.60 25.10 44.60 32.90 C44.60 39.80 38.90 45.80 32.00 45.80 C25.10 45.80 19.40 40.10 19.40 33.20 C19.40 28.10 22.70 24.20 25.70 20.30 C26.60 24.20 28.40 26.30 30.50 27.20 C31.10 22.40 31.40 17.60 33.50 13.40 Z" fill="url(#wfFlame)"/><path d="M32.96 26.60 C35.30 30.20 38.60 33.20 38.60 37.40 C38.60 41.60 35.60 44.60 32.00 44.60 C28.40 44.60 25.40 41.90 25.40 38.00 C25.40 35.00 27.50 32.60 29.00 29.90 C29.60 32.30 30.80 33.80 32.00 34.40 C32.24 31.40 32.24 28.70 32.96 26.60 Z" fill="url(#wfCore)"/></svg>

@@ -1,98 +1,133 @@
 #!/usr/bin/env node
-// Generates every Watchfire brand asset from one geometry definition.
+// Generates every Watchfire brand asset from one definition.
 // Usage: node brand/build.mjs
+//
+// The mark is a shield holding a fire: the shield says the agent guards
+// without touching, the fire is the watchfire itself — a signal kept burning
+// through the night. Navy body, ember flame.
+//
+// Nothing here is hand-edited. If a shape or colour needs changing, change it
+// in this file and regenerate; the SVGs are build output.
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const OUT = dirname(fileURLToPath(import.meta.url));
 
-// Geometry: N blades pinwheel around an octagonal pupil, on a 24 grid.
-const G = { size: 24, c: 12, R: 11, r: 4.6, n: 8, gap: 0.85, pupil: 0.58 };
+// ── Geometry, on a 64-unit grid ──────────────────────────────────────────────
 
-const TAU = Math.PI * 2;
-const rot = -Math.PI / 2 + Math.PI / G.n;
-const f = (x) => Number(x.toFixed(3));
+// Shield with softened top corners.
+const SHIELD =
+  'M32 3.5 C36 5.6 46 9.2 55.4 11.6 C56.5 11.9 57 12.7 57 13.7 V32.6 ' +
+  'C57 46.6 46.4 56.6 32 61.5 C17.6 56.6 7 46.6 7 32.6 V13.7 ' +
+  'C7 12.7 7.5 11.9 8.6 11.6 C18 9.2 28 5.6 32 3.5 Z';
 
-const V = (k) => [
-  G.c + G.r * Math.cos(rot + (k * TAU) / G.n),
-  G.c + G.r * Math.sin(rot + (k * TAU) / G.n),
-];
-
-// Where the ray p->q leaves the outer circle.
-function hit(p, q) {
-  const dx = q[0] - p[0], dy = q[1] - p[1];
-  const fx = p[0] - G.c, fy = p[1] - G.c;
-  const a = dx * dx + dy * dy;
-  const b = 2 * (fx * dx + fy * dy);
-  const c = fx * fx + fy * fy - G.R * G.R;
-  const t = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);
-  return [p[0] + t * dx, p[1] + t * dy];
-}
-
-const O = (k) => hit(V(k), V(k + 1));
-
-// Blade k: from the pupil vertex, out along one edge line, around the rim,
-// back along the next edge line.
-function blade(k) {
-  const a = V(k + 1), b = O(k), c = O(k + 1);
-  return `M${f(a[0])} ${f(a[1])} L${f(b[0])} ${f(b[1])} A${G.R} ${G.R} 0 0 1 ${f(c[0])} ${f(c[1])} Z`;
-}
-
-function mark({ light, deep, pupil, id }) {
-  const blades = Array.from({ length: G.n }, (_, k) =>
-    `<path d="${blade(k)}" fill="${k % 2 ? deep : light}"/>`).join('\n    ');
-  const cuts = Array.from({ length: G.n }, (_, k) => {
-    const a = V(k), b = O(k);
-    return `<line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}"/>`;
-  }).join('\n      ');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${G.size} ${G.size}" role="img" aria-label="Watchfire">
-  <mask id="${id}">
-    <rect width="${G.size}" height="${G.size}" fill="#fff"/>
-    <g stroke="#000" stroke-width="${G.gap}" stroke-linecap="butt">
-      ${cuts}
-    </g>
-  </mask>
-  <g mask="url(#${id})">
-    ${blades}
-  </g>
-  <circle cx="${G.c}" cy="${G.c}" r="${f(G.r * G.pupil)}" fill="${pupil}"/>
-</svg>
-`;
-}
-
-const THEMES = {
-  'mark.svg':      { light: '#6D7BFF', deep: '#4C5BD4', pupil: '#FFB454', id: 'a' },
-  'mark-dark.svg': { light: '#95A0FF', deep: '#6D7BFF', pupil: '#FFC46B', id: 'b' },
-  'mark-mono.svg': { light: 'currentColor', deep: 'currentColor', pupil: 'currentColor', id: 'c' },
+// The flame is drawn with two peaks — a tall leaning tip and a shorter tongue
+// beside it. The valley between them is what reads as fire rather than a leaf.
+const flameAt = (s, dx, dy) => {
+  const p = (x, y) => `${(x * s + dx).toFixed(2)} ${(y * s + dy).toFixed(2)}`;
+  return (
+    `M${p(34.5, 4)} C${p(41, 15)} ${p(53, 23.5)} ${p(53, 36.5)} ` +
+    `C${p(53, 48)} ${p(43.5, 58)} ${p(32, 58)} ` +
+    `C${p(20.5, 58)} ${p(11, 48.5)} ${p(11, 37)} ` +
+    `C${p(11, 28.5)} ${p(16.5, 22)} ${p(21.5, 15.5)} ` +
+    `C${p(23, 22)} ${p(26, 25.5)} ${p(29.5, 27)} ` +
+    `C${p(30.5, 19)} ${p(31, 11)} ${p(34.5, 4)} Z`
+  );
 };
 
-for (const [name, theme] of Object.entries(THEMES)) {
-  writeFileSync(join(OUT, name), mark(theme));
-}
+// The hotter inner core, echoing the outer silhouette.
+const coreAt = (s, dx, dy) => {
+  const p = (x, y) => `${(x * s + dx).toFixed(2)} ${(y * s + dy).toFixed(2)}`;
+  return (
+    `M${p(33.6, 26)} C${p(37.5, 32)} ${p(43, 37)} ${p(43, 44)} ` +
+    `C${p(43, 51)} ${p(38, 56)} ${p(32, 56)} ` +
+    `C${p(26, 56)} ${p(21, 51.5)} ${p(21, 45)} ` +
+    `C${p(21, 40)} ${p(24.5, 36)} ${p(27, 31.5)} ` +
+    `C${p(28, 35.5)} ${p(30, 38)} ${p(32, 39)} ` +
+    `C${p(32.4, 34)} ${p(32.4, 29.5)} ${p(33.6, 26)} Z`
+  );
+};
 
-// Lockup: mark + wordmark.
-function lockup(markTheme, textFill) {
-  const inner = mark(markTheme).replace(/<svg[^>]*>|<\/svg>\n?/g, '');
-  // The wordmark is nine characters, so the box is wider and the type a
-  // little smaller than a short mark would need.
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 80" role="img" aria-label="Watchfire">
-  <g transform="translate(8 12) scale(2.333)">${inner}</g>
-  <text x="84" y="51" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif"
-        font-size="34" font-weight="600" letter-spacing="3.5" fill="${textFill}">Watchfire</text>
-</svg>
-`;
-}
+// Flame sized and placed inside the shield.
+const FLAME = flameAt(0.6, 12.8, 11);
+const CORE = coreAt(0.6, 12.8, 11);
 
-writeFileSync(join(OUT, 'lockup.svg'), lockup({ ...THEMES['mark.svg'], id: 'd' }, '#0B1020'));
-writeFileSync(join(OUT, 'lockup-dark.svg'), lockup({ ...THEMES['mark-dark.svg'], id: 'e' }, '#E6EAF2'));
+// ── Palette ─────────────────────────────────────────────────────────────────
 
-// App icon: the mark on an ink tile, sized inside the maskable safe area.
-const inner = mark({ ...THEMES['mark-dark.svg'], id: 'f' }).replace(/<svg[^>]*>|<\/svg>\n?/g, '');
-writeFileSync(join(OUT, 'app-icon.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Watchfire">
-  <rect width="512" height="512" rx="112" fill="#0B1020"/>
-  <g transform="translate(102 102) scale(12.833)">${inner}</g>
-</svg>
-`);
+const THEMES = {
+  light: { shieldFrom: '#2E5FB8', shieldTo: '#0E2A5C', flameFrom: '#FF8A1E', flameTo: '#FFD166' },
+  // Lifted a step so the shield keeps its edge against a dark page.
+  dark: { shieldFrom: '#4C82E8', shieldTo: '#17407F', flameFrom: '#FF9A2E', flameTo: '#FFDC8A' },
+};
+const WORDMARK = { light: '#0B1020', dark: '#E9ECF5' };
+const TILE = '#0B1020';
+
+const gradients = (t) => `
+  <linearGradient id="wfShield" x1=".1" y1="0" x2=".9" y2="1">
+    <stop offset="0" stop-color="${t.shieldFrom}"/><stop offset="1" stop-color="${t.shieldTo}"/>
+  </linearGradient>
+  <linearGradient id="wfFlame" x1=".25" y1="1" x2=".55" y2="0">
+    <stop offset="0" stop-color="#E8471F"/><stop offset=".45" stop-color="${t.flameFrom}"/><stop offset="1" stop-color="${t.flameTo}"/>
+  </linearGradient>
+  <linearGradient id="wfCore" x1=".3" y1="1" x2=".5" y2="0">
+    <stop offset="0" stop-color="${t.flameFrom}"/><stop offset="1" stop-color="#FFF3D0"/>
+  </linearGradient>`;
+
+const body = () =>
+  `<path d="${SHIELD}" fill="url(#wfShield)"/>` +
+  `<path d="${FLAME}" fill="url(#wfFlame)"/>` +
+  `<path d="${CORE}" fill="url(#wfCore)"/>`;
+
+const svg = (inner, defs = '', viewBox = '0 0 64 64') =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" role="img" aria-label="Watchfire">` +
+  (defs ? `<defs>${defs}</defs>` : '') +
+  inner +
+  '</svg>\n';
+
+// ── Assets ──────────────────────────────────────────────────────────────────
+
+writeFileSync(join(OUT, 'mark.svg'), svg(body(), gradients(THEMES.light)));
+writeFileSync(join(OUT, 'mark-dark.svg'), svg(body(), gradients(THEMES.dark)));
+
+// Single colour: the flame is knocked out of the shield, so the mark takes the
+// surrounding text colour. Only resolves when inlined — an <img> renders it black.
+writeFileSync(
+  join(OUT, 'mark-mono.svg'),
+  svg(`<path fill-rule="evenodd" fill="currentColor" d="${SHIELD} ${FLAME}"/>`),
+);
+
+// Lighter-weight variant for dense UI, where a solid shield is too heavy.
+writeFileSync(
+  join(OUT, 'mark-outline.svg'),
+  svg(
+    `<path d="${SHIELD}" fill="none" stroke="url(#wfShield)" stroke-width="4.4" stroke-linejoin="round"/>` +
+      `<path d="${flameAt(0.46, 14.6, 16)}" fill="url(#wfFlame)"/>` +
+      `<path d="${coreAt(0.46, 14.6, 16)}" fill="url(#wfCore)"/>`,
+    gradients(THEMES.light),
+  ),
+);
+
+const lockup = (theme, fill) =>
+  svg(
+    `<g transform="translate(6 8) scale(.78)">${body()}</g>` +
+      `<text x="72" y="52" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" ` +
+      `font-size="30" font-weight="650" letter-spacing="0.5" fill="${fill}">Watchfire</text>`,
+    gradients(theme),
+    '0 0 240 72',
+  );
+
+writeFileSync(join(OUT, 'lockup.svg'), lockup(THEMES.light, WORDMARK.light));
+writeFileSync(join(OUT, 'lockup-dark.svg'), lockup(THEMES.dark, WORDMARK.dark));
+
+// App icon: the mark on an ink tile, inside the maskable safe area.
+writeFileSync(
+  join(OUT, 'app-icon.svg'),
+  svg(
+    `<rect width="64" height="64" rx="14" fill="${TILE}"/>` +
+      `<g transform="translate(32 32) scale(.78) translate(-32 -32)">${body()}</g>`,
+    gradients(THEMES.dark),
+  ),
+);
 
 console.log('wrote 6 svg assets to brand/');
