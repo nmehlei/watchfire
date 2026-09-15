@@ -130,4 +130,4 @@ writeFileSync(
   ),
 );
 
-console.log('wrote 6 svg assets to brand/');
+console.log('wrote 7 svg assets to brand/');
